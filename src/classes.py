@@ -596,10 +596,7 @@ def evaluate_fitness(model, sag: SymbolicAsyncGraph, target_sinks: List[State], 
         matching_variables += ((min(len(target_sinks), len(observed_sinks)) * dimension) - cost)
 
     # try to observe how many sinks absent and on which side
-    if len(target_sinks) == len(observed_sinks):
-        return matching_variables * total_variables
-
-    elif len(target_sinks) > len(observed_sinks):
+    if len(target_sinks) > len(observed_sinks):
         # not ideal - some steady-states from data were not reached by given model,
         # check if missing steady-states are on some other type of attractor
         unmatched_states = get_unmatched_states(bpg, pairs, 0, len(target_sinks))
@@ -607,11 +604,12 @@ def evaluate_fitness(model, sag: SymbolicAsyncGraph, target_sinks: List[State], 
             if is_attractor_state(model, sag, state):
                 matching_variables += dimension * 1/2  # penalty 1/3 for not being in single state
 
-    else:  # len(target_sinks) < len(observed_sinks)
+    elif len(target_sinks) < len(observed_sinks):
         # there is possibility that some steady-states were not caught while measuring, not a big problem if only few
         unmatched_states = get_unmatched_states(bpg, pairs, 1, len(observed_sinks))
         matching_variables += len(unmatched_states) * dimension * 3/4  # penalty for not being in data
 
+    # if target == observed then no correction is needed
     return matching_variables / total_variables
 
 
