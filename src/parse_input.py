@@ -10,7 +10,8 @@ def read_input_matrix(matrix_path: str, tsv: bool) -> Dict[int, List[State]]:
     wild type experiment; and value corresponds to set of observed steady states of the target network.
     :param matrix_path - path to file containing the input matrix of steady states
     :param tsv - True if matrix's delimiter is tab, False if semicolon is used
-    :return dictionary where key is index of perturbed gene and value is set of corresponding steady states"""
+    :return dictionary where key is index of perturbed gene and value is set of corresponding steady states
+    TODO allow to have both - KO and OE experiments for the same gene, distinguish them in the input dictionary"""
 
     with open(matrix_path, "r") as matrix:
         steady_states: Dict[int, List[State]] = {}

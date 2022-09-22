@@ -6,13 +6,18 @@ State = Tuple[bool]
 
 
 def get_symbolic_async_graph(model_string) -> Tuple[BooleanNetwork, SymbolicAsyncGraph]:
-	"""Docstring TODO"""
+	"""Precomputes model computational structures from string representation, which is essential for iterative approach
+	:param model_string  string representation of Boolean model
+	:return tuple of computational structures of given model"""
+
 	model = BooleanNetwork.from_aeon(model_string)
 	return model, SymbolicAsyncGraph(model)
 
 
 def detect_steady_states(sag: SymbolicAsyncGraph) -> List[State]:
-	"""Docstring TODO"""
+	"""Returns list of steady states of given model represented by Symbolic Asynchronous graph.
+	:param sag  Symbolic Asynchronous graph of Boolean model
+	:return list of steady states"""
 
 	candidates = []
 	for var in sag.network().variables():
@@ -24,6 +29,7 @@ def detect_steady_states(sag: SymbolicAsyncGraph) -> List[State]:
 		item = candidates.pop()
 		candidates = [item.intersect(x) for x in candidates]
 
-	if not candidates[0].vertices().list_vertices():
+	sinks = candidates[0].vertices().list_vertices()
+	if not sinks:
 		return []
-	return list(map(tuple, candidates[0].vertices().list_vertices()))
+	return list(map(tuple, sinks))
