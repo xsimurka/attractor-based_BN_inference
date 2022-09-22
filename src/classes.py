@@ -581,42 +581,38 @@ def evaluate_fitness(model, sag: SymbolicAsyncGraph, target_sinks: List[State], 
 
     bpg = BipartiteGraph(target_sinks, observed_sinks)
     cost, pairs = bpg.minimal_weighted_assignment()
+    dimension = len(target_sinks[0])
+    # weight of one variable in one state is computed as:
+    # number of overlapping state tuples + number of overhanging states, multiplied by dimension of reduced model
+    # therefore, each assigned tuple of states "behaves as one" and has weight equal to their reduced dimension and
+    # each overhanging state alone has weight equal to its reduced dimension, one variable thus, have weight equal to
+    # 1 / total number of variables where matching tuple of variables act as one
+    matching_variables = 0
+    total_variables = (abs(len(target_sinks) - len(observed_sinks)) + min(len(target_sinks), len(observed_sinks))) * dimension
 
-    # determines how many % of variables of all states from minimal assignment matches target data
-    if cost is None:
-        normalized_similarity = 0
-    else:
-        # dimension of observed states can be lower or equal than target due to the isolated variable reduction,
-        # but has at least one item as the <cost> is not None, so we can access the first element
-        normalized_similarity = 1 - (cost / (len(pairs) * len(bpg.observed[0])))
+    # if some states were matched, then total number of matching variables is equal to total number of variables
+    # minus cost (variables that do not match), else it stays equal to 0 (initial value)
+    if cost is not None:
+        matching_variables += ((min(len(target_sinks), len(observed_sinks)) * dimension) - cost)
 
     # try to observe how many sinks absent and on which side
-    if len(bpg.target) == len(bpg.observed):
-        return normalized_similarity
+    if len(target_sinks) == len(observed_sinks):
+        return matching_variables * total_variables
 
-    elif len(bpg.target) > len(bpg.observed):
+    elif len(target_sinks) > len(observed_sinks):
         # not ideal - some steady-states from data were not reached by given model,
         # check if missing steady-states are on some other type of attractor
-        unmatched_states = get_unmatched_states(bpg, pairs, 0, len(bpg.target))
-        decrease_factor = 1
-        weight_of_state = 1 / len(bpg.target)
+        unmatched_states = get_unmatched_states(bpg, pairs, 0, len(target_sinks))
         for state in unmatched_states:
-            # for each state decrease similarity about certain % depending on if it is attractor or transient state
-            # if unmatched state is state of attractor it is favored over the state which is not
             if is_attractor_state(model, sag, state):
-                decrease_factor -= 1/3 * weight_of_state
-            else:
-                decrease_factor -= weight_of_state
-        return normalized_similarity * decrease_factor
+                matching_variables += dimension * 1/2  # penalty 1/3 for not being in single state
 
-    elif len(bpg.target) < len(bpg.observed):
-        decrease_factor = 1
+    else:  # len(target_sinks) < len(observed_sinks)
         # there is possibility that some steady-states were not caught while measuring, not a big problem if only few
-        unmatched_states = get_unmatched_states(bpg, pairs, 1, len(bpg.observed))
-        weight_of_state = 1 / len(bpg.observed)
-        # for each state which is transient, decrease similarity about certain %, increasing with the raising amount
-        decrease_factor -= weight_of_state * len(unmatched_states)
-        return normalized_similarity * decrease_factor
+        unmatched_states = get_unmatched_states(bpg, pairs, 1, len(observed_sinks))
+        matching_variables += len(unmatched_states) * dimension * 3/4  # penalty for not being in data
+
+    return matching_variables / total_variables
 
 
 def get_unmatched_states(bpg: BipartiteGraph, matched_pairs: List[Tuple[int, int]],
