@@ -1,6 +1,6 @@
 from math import sqrt
 from typing import List, Tuple, Optional, Dict, Set
-from classes import Regulation
+from src.classes.Regulation import Regulation
 
 
 State = Tuple[bool]

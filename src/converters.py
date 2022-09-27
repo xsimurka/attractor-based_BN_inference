@@ -1,6 +1,6 @@
 from re import sub
 from typing import Optional
-from classes import BooleanNetwork
+import src.classes.BooleanNetwork as bn
 
 
 def zavorky(s):
@@ -97,7 +97,7 @@ def refine_spaces(line: str) -> str:
     return line
 
 
-def from_ncfs_to_aeon(bn: BooleanNetwork) -> str:
+def from_ncfs_to_aeon(bn: bn.BooleanNetwork) -> str:
     result = ""
     for i in range(len(bn.functions)):
         if not bn.functions[i].indices:  # empty update function
