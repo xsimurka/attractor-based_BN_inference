@@ -38,6 +38,7 @@ def detect_steady_states(sag: SymbolicAsyncGraph) -> List[State]:
 		return []
 	return list(map(tuple, sinks))
 
+
 def is_attractor_state(model, sag: SymbolicAsyncGraph, state: Tuple[bool]) -> bool:
 	"""Finds out whether given states lies in any kind of attractor of given model. For the iterative approach
 	it is essential to compute model and symbolic graph just once as it is more time demanding.

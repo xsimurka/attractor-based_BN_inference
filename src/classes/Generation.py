@@ -1,13 +1,16 @@
 import src.utils as utils
-from src.detect import detect_steady_states, get_symbolic_async_graph
+from src.detect import detect_steady_states, get_symbolic_async_graph, is_attractor_state
 from src.classes.BooleanNetwork import BooleanNetwork
-from typing import Optional, List
+from typing import Optional, List, Tuple
 from scipy.special import softmax
 import numpy as np
 import pandas as pd
 from random import choices
 from copy import deepcopy
-from src.parse_input import BNInfo
+import src.classes.BNInfo as bn
+import src.classes.BipartiteGraph as bg
+
+State = Tuple[bool]
 
 
 class Generation:
@@ -21,7 +24,7 @@ class Generation:
         scores            fitness score for each network from <networks> in [0; 1]
                           describes how well the network fits the input data"""
 
-    def __init__(self, num_of_nets: int, num_of_variables: int, target_sinks: BNInfo,
+    def __init__(self, num_of_nets: int, num_of_variables: int, target_sinks: bn.BNInfo,
                  nets: Optional[List[BooleanNetwork]] = None):
         self.num_of_nets = num_of_nets
         self.num_of_variables = num_of_variables
@@ -73,36 +76,77 @@ class Generation:
         for i in range(self.num_of_nets):
             total_score = 0
 
-            isolated_variables = self.networks[i].get_isolated_variables(-1)
-            aeon_model_string = self.networks[i].to_aeon_string(-1, isolated_variables)
-            model, sag = get_symbolic_async_graph(aeon_model_string)
-            observed_sinks = detect_steady_states(sag)
-            total_score += utils.evaluate_fitness(model, sag,
-                                                  utils.reduce_attractors_dimension(self.target_sinks.wt_sinks,
-                                                                                    isolated_variables),
-                                                  observed_sinks)
+            total_score += self.evaluate_fitness(i, -1)
 
             for j in sorted(self.target_sinks.ko_sinks.keys()):
-                isolated_variables = self.networks[i].get_isolated_variables(j)
-                aeon_model_string = self.networks[i].to_aeon_string(j, isolated_variables, False)
-                model, sag = get_symbolic_async_graph(aeon_model_string)
-                observed_sinks = detect_steady_states(sag)
-                total_score += utils.evaluate_fitness(model, sag,
-                                                      utils.reduce_attractors_dimension(self.target_sinks.ko_sinks[j],
-                                                                                        isolated_variables),
-                                                      observed_sinks)
+                total_score += self.evaluate_fitness(i, j, False)
 
             for j in sorted(
                     self.target_sinks.oe_sinks.keys()):  # iterates over perturbed gene indices of all experiments
-                isolated_variables = self.networks[i].get_isolated_variables(j)
-                # if WT then no gene is perturbed, if MT then looks at j-th variable of first (but basically any)
-                # steady-state and derives type of perturbation (if 0 then it is KO, if 1 then it is OE)
-                aeon_model_string = self.networks[i].to_aeon_string(j, isolated_variables, True)
-                model, sag = get_symbolic_async_graph(aeon_model_string)
-                observed_sinks = detect_steady_states(sag)
-                total_score += utils.evaluate_fitness(model, sag,
-                                                      utils.reduce_attractors_dimension(self.target_sinks.oe_sinks[j],
-                                                                                        isolated_variables),
-                                                      observed_sinks)
+                total_score += self.evaluate_fitness(i, j, True)
+
             # final net's score is average score of all experiments
             self.scores[i] = total_score / (len(self.target_sinks.ko_sinks) + len(self.target_sinks.oe_sinks) + 1)
+
+    def evaluate_fitness(self, network_index: int, perturbed_gene_index: int,
+                         perturbed_gene_state: Optional[bool] = None) -> float:
+        """Evaluates fitness of given BN depending on its steady-state attractors comparing to steady-states from
+        given attractor data.
+
+        :param network_index          biodivine_aeon.BooleanNetwork model of actual BN
+        :param perturbed_gene_index   Symbolic Asynchronous Graph of actual model
+        :param perturbed_gene_state   steady-states of particular experiment from data
+        :return                       real number from [0;1] that determines BN's fitness"""
+
+        isolated_variables = self.networks[network_index].get_isolated_variables(perturbed_gene_index)
+        # if WT then no gene is perturbed, if MT then looks at j-th variable of first (but basically any)
+        # steady-state and derives type of perturbation (if 0 then it is KO, if 1 then it is OE)
+        aeon_model_string = self.networks[network_index].to_aeon_string(perturbed_gene_index, isolated_variables,
+                                                                        perturbed_gene_state)
+        model, sag = get_symbolic_async_graph(aeon_model_string)
+        target_sinks = self.get_target_sinks(perturbed_gene_index, perturbed_gene_state)
+        if isolated_variables:
+            target_sinks = utils.reduce_attractors_dimension(target_sinks, isolated_variables)
+        observed_sinks = detect_steady_states(sag)
+        bpg = bg.BipartiteGraph(target_sinks, observed_sinks)
+        cost, pairs = bpg.minimal_weighted_assignment()
+        dimension = len(target_sinks[0])
+        # weight of one variable in one state is computed as:
+        # number of overlapping state tuples + number of overhanging states, multiplied by dimension of reduced model
+        # therefore, each assigned tuple of states "behaves as one" and has weight equal to their reduced dimension and
+        # each overhanging state alone has weight equal to its reduced dimension, one variable thus, have weight equal to
+        # 1 / total number of variables where matching tuple of variables act as one
+        matching_variables = 0
+        total_variables = (abs(len(target_sinks) - len(observed_sinks)) + min(len(target_sinks),
+                                                                              len(observed_sinks))) * dimension
+
+        # if some states were matched, then total number of matching variables is equal to total number of variables
+        # minus cost (variables that do not match), else it stays equal to 0 (initial value)
+        if cost is not None:
+            matching_variables += ((min(len(target_sinks), len(observed_sinks)) * dimension) - cost)
+
+        # try to observe how many sinks absent and on which side
+        if len(target_sinks) > len(observed_sinks):
+            # not ideal - some steady-states from data were not reached by given model,
+            # check if missing steady-states are on some other type of attractor
+            unmatched_states = utils.get_unmatched_states(bpg, pairs, 0, len(target_sinks))
+            for state in unmatched_states:
+                if is_attractor_state(model, sag, state):
+                    matching_variables += dimension * 1 / 2  # penalty 1/3 for not being in single state
+
+        elif len(target_sinks) < len(observed_sinks):
+            # there is possibility that some steady-states were not caught while measuring, not a big problem if only few
+            unmatched_states = utils.get_unmatched_states(bpg, pairs, 1, len(observed_sinks))
+            matching_variables += len(unmatched_states) * dimension * 3 / 4  # penalty for not being in data
+
+        # if target == observed then no correction is needed
+        return matching_variables / total_variables
+
+    def get_target_sinks(self, perturbed_gene_index: int, perturbed_gene_state: Optional[bool] = None) -> List[State]:
+        """"""
+
+        if perturbed_gene_index == -1:
+            return self.target_sinks.wt_sinks
+
+        return (self.target_sinks.oe_sinks if perturbed_gene_state else self.target_sinks.ko_sinks)[
+            perturbed_gene_index]

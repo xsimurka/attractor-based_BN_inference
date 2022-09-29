@@ -1,27 +1,20 @@
 from typing import Dict, List, Set, Tuple
 import src.classes.Regulation as reg
+import src.classes.BNInfo as bn
 
 
 State = Tuple[bool]
 
 
-class BNInfo:
-
-    def __init__(self):
-        self.wt_sinks: List[State] = []
-        self.ko_sinks: Dict[int, List[State]] = {}
-        self.oe_sinks: Dict[int, List[State]] = {}
-
-
-def read_input_matrix(matrix_path: str, tsv: bool) -> BNInfo:
+def read_input_matrix(matrix_path: str, num_of_genes: int, tsv: bool) -> bn.BNInfo:
     """Reads input matrix of steady-states, returns dictionary where key corresponds to perturbed gene or -1 for
     wild type experiment; and value corresponds to set of observed steady states of the target network.
     :param matrix_path - path to file containing the input matrix of steady states
+    :param num_of_genes
     :param tsv - True if matrix's delimiter is tab, False if semicolon is used
-    :return dictionary where key is index of perturbed gene and value is set of corresponding steady states
-    TODO allow to have both - KO and OE experiments for the same gene, distinguish them in the input dictionary"""
+    :return dictionary where key is index of perturbed gene and value is set of corresponding steady states"""
 
-    target_bn_info = BNInfo()
+    target_bn_info = bn.BNInfo(num_of_genes)
     with open(matrix_path, "r") as matrix:
         for line in matrix:
             perturbed_gene, state = parse_line(line, tsv)
@@ -57,7 +50,7 @@ def read_input_constrains(constraints_path: str, tsv: bool) -> Set[reg.Regulatio
     return regulations
 
 
-def get_experiment_state_list(bn_info: BNInfo, perturbed_gene: int, state: State) -> List[State]:
+def get_experiment_state_list(bn_info: bn.BNInfo, perturbed_gene: int, state: State) -> List[State]:
     """"""
     if perturbed_gene == -1:
         return bn_info.wt_sinks

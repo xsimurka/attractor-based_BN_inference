@@ -1,9 +1,7 @@
 from random import choice
-from biodivine_aeon import SymbolicAsyncGraph
 from typing import Set, Tuple, Optional, List, Any
 from operator import itemgetter
-from detect import is_attractor_state
-from parse_input import BNInfo
+import src.classes.BNInfo as bn
 import src.classes.Regulation as reg
 import src.classes.Generation as gen
 import src.classes.BipartiteGraph as bg
@@ -27,7 +25,7 @@ def generate_rule(sign: Optional[bool]) -> Tuple[int, int]:
 
 
 def create_initial_generation(num_of_nets: int, num_of_variables: int, input_constraints: Set[reg.Regulation],
-                              derived_constraints: Set[reg.Regulation], sinks: BNInfo) -> gen.Generation:
+                              derived_constraints: Set[reg.Regulation], sinks: bn.BNInfo) -> gen.Generation:
     """Creates the initial generation using regulations observed from input and derived constraints. Each BN is then
     mutated only once on one gene.
 
@@ -60,50 +58,6 @@ def manhattan_distance(state1: Tuple[bool], state2: Tuple[bool]) -> int:
         if state1[i] != state2[i]:
             result += 1
     return result
-
-
-def evaluate_fitness(model, sag: SymbolicAsyncGraph, target_sinks: List[State], observed_sinks: List[State]) -> float:
-    """Evaluates fitness of given BN depending on its steady-state attractors comparing to steady-states from
-    given attractor data.
-
-    :param model           biodivine_aeon.BooleanNetwork model of actual BN
-    :param sag             Symbolic Asynchronous Graph of actual model
-    :param target_sinks    steady-states of particular experiment from data
-    :param observed_sinks  steady-states observed from model attractor analysis of particular experiment
-    :return                real number from [0;1] that determines BN's fitness"""
-
-    bpg = bg.BipartiteGraph(target_sinks, observed_sinks)
-    cost, pairs = bpg.minimal_weighted_assignment()
-    dimension = len(target_sinks[0])
-    # weight of one variable in one state is computed as:
-    # number of overlapping state tuples + number of overhanging states, multiplied by dimension of reduced model
-    # therefore, each assigned tuple of states "behaves as one" and has weight equal to their reduced dimension and
-    # each overhanging state alone has weight equal to its reduced dimension, one variable thus, have weight equal to
-    # 1 / total number of variables where matching tuple of variables act as one
-    matching_variables = 0
-    total_variables = (abs(len(target_sinks) - len(observed_sinks)) + min(len(target_sinks), len(observed_sinks))) * dimension
-
-    # if some states were matched, then total number of matching variables is equal to total number of variables
-    # minus cost (variables that do not match), else it stays equal to 0 (initial value)
-    if cost is not None:
-        matching_variables += ((min(len(target_sinks), len(observed_sinks)) * dimension) - cost)
-
-    # try to observe how many sinks absent and on which side
-    if len(target_sinks) > len(observed_sinks):
-        # not ideal - some steady-states from data were not reached by given model,
-        # check if missing steady-states are on some other type of attractor
-        unmatched_states = get_unmatched_states(bpg, pairs, 0, len(target_sinks))
-        for state in unmatched_states:
-            if is_attractor_state(model, sag, state):
-                matching_variables += dimension * 1/2  # penalty 1/3 for not being in single state
-
-    elif len(target_sinks) < len(observed_sinks):
-        # there is possibility that some steady-states were not caught while measuring, not a big problem if only few
-        unmatched_states = get_unmatched_states(bpg, pairs, 1, len(observed_sinks))
-        matching_variables += len(unmatched_states) * dimension * 3/4  # penalty for not being in data
-
-    # if target == observed then no correction is needed
-    return matching_variables / total_variables
 
 
 def get_unmatched_states(bpg: bg.BipartiteGraph, matched_pairs: List[Tuple[int, int]],
