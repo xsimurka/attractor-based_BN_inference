@@ -1,4 +1,4 @@
-from typing import Dict, List, Set, Tuple
+from typing import List, Set, Tuple
 import src.classes.Regulation as reg
 import src.classes.BNInfo as bn
 
@@ -6,15 +6,15 @@ import src.classes.BNInfo as bn
 State = Tuple[bool]
 
 
-def read_input_matrix(matrix_path: str, num_of_genes: int, tsv: bool) -> bn.BNInfo:
+def read_input_matrix(matrix_path: str, num_of_variables: int, tsv: bool) -> bn.BNInfo:
     """Reads input matrix of steady-states, returns dictionary where key corresponds to perturbed gene or -1 for
     wild type experiment; and value corresponds to set of observed steady states of the target network.
     :param matrix_path - path to file containing the input matrix of steady states
-    :param num_of_genes
+    :param num_of_variables
     :param tsv - True if matrix's delimiter is tab, False if semicolon is used
     :return dictionary where key is index of perturbed gene and value is set of corresponding steady states"""
 
-    target_bn_info = bn.BNInfo(num_of_genes)
+    target_bn_info = bn.BNInfo(num_of_variables)
     with open(matrix_path, "r") as matrix:
         for line in matrix:
             perturbed_gene, state = parse_line(line, tsv)
@@ -34,7 +34,7 @@ def parse_line(line: str, tsv: bool) -> Tuple[int, State]:
     return tmp[0], tuple(bool(x) for x in tmp[1:])
 
 
-def read_input_constrains(constraints_path: str, tsv: bool) -> Set[reg.Regulation]:
+def read_input_constrains(constraints_path: str, tsv: bool) -> List[reg.Regulation]:
     """Reads input file containing fixed regulations, returns list of initialized regulation objects.
 
     :param constraints_path  path to file containing the fixed regulations' notations
@@ -42,11 +42,11 @@ def read_input_constrains(constraints_path: str, tsv: bool) -> Set[reg.Regulatio
     :return                  list of fixed regulations"""
 
     with open(constraints_path, "r") as constraints:
-        regulations: Set[reg.Regulation] = set()
+        regulations: List[reg.Regulation] = list()
         for line in constraints:
             tmp = tuple(line.split(None if tsv else ";"))
             source, target, sign = int(tmp[0]), int(tmp[1]), True if tmp[2] == '+' else False
-            regulations.add(reg.Regulation(source, target, sign))
+            regulations.append(reg.Regulation(source, target, sign, True))
     return regulations
 
 

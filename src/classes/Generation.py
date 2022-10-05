@@ -96,7 +96,9 @@ class Generation:
         :param network_index          biodivine_aeon.BooleanNetwork model of actual BN
         :param perturbed_gene_index   Symbolic Asynchronous Graph of actual model
         :param perturbed_gene_state   steady-states of particular experiment from data
-        :return                       real number from [0;1] that determines BN's fitness"""
+        :return                       real number from [0;1] that determines BN's fitness
+        TODO: with increasing number of nodes, number of steady-states grows exponentially and metrics becomes unusable
+        """
 
         isolated_variables = self.networks[network_index].get_isolated_variables(perturbed_gene_index)
         # if WT then no gene is perturbed, if MT then looks at j-th variable of first (but basically any)

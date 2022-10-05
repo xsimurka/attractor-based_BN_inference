@@ -23,7 +23,7 @@ class BooleanNetwork:
         return sum(map(lambda x: x.arity, self.functions))
 
 
-    def initialize_ncfs(self, regulators: Set[Regulation]) -> None:
+    def initialize_ncfs(self, regulators: List[Regulation]) -> None:
         """Initializes NCF rules of given BN by using set of fixed regulations that can not be changed
 
         :param regulators  set of fixed regulations that can not be changed"""

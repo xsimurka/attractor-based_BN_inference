@@ -1,4 +1,4 @@
-from typing import Set
+from typing import List
 import src.utils as utils
 from src.classes.Regulation import Regulation
 from parse_input import read_input_matrix, read_input_constrains
@@ -9,11 +9,11 @@ from src.classes.BNInfo import BNInfo
 def main(sink_matrix_path: str, input_constraints_path: str, tsv: bool, threshold: float, best_ratio: float,
          num_of_nets: int, num_of_variables: int, num_of_genes: int, num_of_mutations: int, max_iter: int,
          max_fit: float, output_path: str):
-
-    sinks: BNInfo = read_input_matrix(sink_matrix_path, tsv)  # DONE
-    input_constraints: Set[Regulation] = read_input_constrains(input_constraints_path, tsv)  # DONE
-    # derived_constraints: Set[Regulation] = derive_constraints(sinks, threshold)  # TODO
-    act_generation = utils.create_initial_generation(num_of_nets, num_of_variables, input_constraints, set(), sinks)
+    sinks: BNInfo = read_input_matrix(sink_matrix_path, num_of_variables, tsv)
+    input_constraints: List[Regulation] = read_input_constrains(input_constraints_path, tsv)
+    derived_constraints: List[Regulation] = sinks.derive_constraints(threshold)
+    act_generation = utils.create_initial_generation(num_of_nets, num_of_variables, input_constraints,
+                                                     derived_constraints, sinks)
 
     act_iter = 1
     while True:
