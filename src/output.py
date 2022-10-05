@@ -4,6 +4,7 @@ import os
 
 def output_to_directory(target_dir: str, gen: gen.Generation):
     """Creates output directory from given path, creates output files and stores best networks each to separate file
+
     :param target_dir  output dir if not exists then will be created
     :param gen         last generation of networks"""
 

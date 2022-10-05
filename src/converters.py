@@ -1,6 +1,8 @@
 from re import sub
 from typing import Optional
-#import src.classes.BooleanNetwork as bn
+
+
+# import src.classes.BooleanNetwork as bn
 
 
 def zavorky(s):
@@ -54,9 +56,9 @@ def to_aeon(input_path, output_path):
                 if line[i] == ':':
                     break
 
-                if line[i].isdigit() and not line[i-1].isdigit():
+                if line[i].isdigit() and not line[i - 1].isdigit():
                     actual = get_num(line, i)
-                    bond = ">" if line[i-1] == ' ' else "|"
+                    bond = ">" if line[i - 1] == ' ' else "|"
                     lst.append("v_{0} -{1} v_{2}".format(actual, bond, base))
                     line = line[:i] + "v_" + line[i:]
                 i -= 1

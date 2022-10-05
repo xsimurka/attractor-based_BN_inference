@@ -7,7 +7,6 @@ import src.classes.Generation as gen
 import src.classes.BipartiteGraph as bg
 from math import ceil
 
-
 State = Tuple[bool]
 
 
@@ -22,7 +21,6 @@ def generate_rule(sign: Optional[bool]) -> Tuple[int, int]:
     if sign is None:
         return choice([(1, 1), (0, 0), (0, 1), (1, 0)])
     return choice([(1, 1), (0, 0)] if sign else [(0, 1), (1, 0)])
-
 
 
 def create_initial_generation(num_of_nets: int, num_of_variables: int, input_constraints: List[reg.Regulation],
@@ -47,7 +45,6 @@ def create_initial_generation(num_of_nets: int, num_of_variables: int, input_con
     return init_gen
 
 
-
 def manhattan_distance(state1: Tuple[bool], state2: Tuple[bool]) -> int:
     """Calculates manhattan distance between two steady-states.
 
@@ -63,21 +60,20 @@ def manhattan_distance(state1: Tuple[bool], state2: Tuple[bool]) -> int:
     return result
 
 
-def get_unmatched_states(bpg: bg.BipartiteGraph, matched_pairs: List[Tuple[int, int]],
-                         position: int, total_number: int) -> List[State]:
+def get_unmatched_states(bpg: bg.BipartiteGraph, matched_pairs: List[Tuple[int, int]], overhung: List[State],
+                         position: int) -> List[State]:
     """Returns indices of states that were not matched in minimal weighted assignment.
 
     :param bpg            bipartite graph of steady-states of current BN
     :param matched_pairs  list of tuples of matched steady-states
+    :param overhung       overhung
     :param position       0 if some target steady-stated were not matched, 1 if observed were not matched
-    :param total_number   total number of steady-states, specified by <position>
     :return               list of states that were not matched in minimal weighted assignment"""
 
     assert len(bpg.target) != len(bpg.observed)
-    matched = list(map(itemgetter(position), matched_pairs))
-    unmatched_indices = set(range(total_number)) - set(matched)  # set difference returns unmatched indices
+    matched_indices = list(map(itemgetter(position), matched_pairs))
+    unmatched_indices = set(range(len(overhung))) - set(matched_indices)  # set difference returns unmatched indices
     unmatched_states = []
-    overhung = bpg.target if position == 0 else bpg.observed  # link to either target of observed list of steady-states
 
     for i in unmatched_indices:
         unmatched_states.append(overhung[i])

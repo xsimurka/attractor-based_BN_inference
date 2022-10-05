@@ -20,7 +20,6 @@ class BipartiteGraph:
         self.distances: List[List[Optional[int]]] = [[None] * len(self.target) for _ in range(len(self.observed))]
         self.calculate_distances()
 
-
     def calculate_distances(self):
         """Calculate distances between all pairs observed-target steady-state. Sets .distances matrix
         Distance between two states is equal to their Manhattan distance."""
@@ -28,7 +27,6 @@ class BipartiteGraph:
         for i in range(len(self.observed)):
             for j in range(len(self.target)):
                 self.distances[i][j] = utils.manhattan_distance(self.observed[i], self.target[j])
-
 
     def minimal_weighted_assignment(self) -> Tuple[Optional[int], List[Tuple[int, int]]]:
         """Calculates minimal weighted assignment of given (possibly unbalanced) bipartite graph

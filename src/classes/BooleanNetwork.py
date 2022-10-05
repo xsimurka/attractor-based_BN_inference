@@ -22,7 +22,6 @@ class BooleanNetwork:
 
         return sum(map(lambda x: x.arity, self.functions))
 
-
     def initialize_ncfs(self, regulators: List[Regulation]) -> None:
         """Initializes NCF rules of given BN by using set of fixed regulations that can not be changed
 
@@ -30,7 +29,6 @@ class BooleanNetwork:
 
         for regulation in regulators:
             self.add_regulator(regulation, True)
-
 
     def add_regulator(self, regulation: Regulation, fixed: bool, position: Optional[int] = None) -> None:
         """Adds new regulation to target gene specified in <regulation> on a specific position
@@ -45,7 +43,6 @@ class BooleanNetwork:
         canalyzing, canalyzed = utils.generate_rule(regulation.sign)
         self.functions[regulation.target].add_rule(canalyzing, canalyzed, position)
 
-
     def mutate(self, num_of_genes: int, num_of_mutations: int) -> None:
         """Mutates particular number of genes of given BN and performs particular number of mutations of each gene
 
@@ -55,7 +52,6 @@ class BooleanNetwork:
         genes_to_mutate = choices(range(self.num_of_variables), k=num_of_genes)
         for gene in genes_to_mutate:
             self.functions[gene].mutate(self.num_of_variables, num_of_mutations, self.total_num_of_regulations)
-
 
     def to_aeon_string(self, perturbed_gene: int, isolated_variables: Set[int],
                        perturbation_state: Optional[bool] = None, ) -> str:
@@ -96,7 +92,6 @@ class BooleanNetwork:
 
         return model_string
 
-
     def get_regulated_by(self, gene: int) -> Set[int]:
         """Returns set of genes that are regulated by given gene.
 
@@ -110,7 +105,6 @@ class BooleanNetwork:
                     result.add(i)
 
         return result
-
 
     def get_isolated_variables(self, perturbed_gene: int):
         """Returns set of isolated variables of given BN i.e., variables that have no regulators (inputs)
@@ -139,7 +133,6 @@ class BooleanNetwork:
                 output_variables.add(act_gene)
 
         return output_variables.intersection(input_variables)
-
 
     def remove_perturbed_gene(self, perturbed_gene: int) -> bool:
         if perturbed_gene == -1:

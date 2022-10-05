@@ -31,7 +31,6 @@ class UpdateFunction:
         """Actual number of regulators"""
         return len(self.indices)
 
-
     def to_aeon_string(self) -> str:
         """Returns string representation of given NCF in .aeon format
 
@@ -50,7 +49,6 @@ class UpdateFunction:
 
         return "$v_{}:{}".format(self.gene, function_string)
 
-
     def add_gene(self, gene: int, fixed: bool, position: Optional[int] = None) -> None:
         """Adds new gene index to list of regulators of given NCF on given position. For time complexity reason it is
         differentiated between appending on the last position and inserting elsewhere.
@@ -66,7 +64,6 @@ class UpdateFunction:
             self.indices.insert(position, gene)
         if fixed:
             self.fixed.add(gene)
-
 
     def add_rule(self, canalyzing: int, canalyzed: int, position: Optional[int] = None) -> None:
         """Adds given canalyzing and canalyzed value to given NCF rule on given position. For time complexity reason
@@ -84,7 +81,6 @@ class UpdateFunction:
             self.canalyzing.insert(position, canalyzing)
             self.canalyzed.insert(position, canalyzed)
 
-
     def evaluate(self, interpretation: Tuple[int]) -> bool:
         """Returns the valuation of given NCF rule of given interpretation
         If variable from interpretation matches its corresponding canalyzing value, function returns corresponding
@@ -100,7 +96,6 @@ class UpdateFunction:
                 return bool(self.canalyzed[i])
 
         return not bool(self.canalyzed[-1])
-
 
     def select_possible_mutations(self, gene: int, total_num_of_regulations: int) -> List[str]:
         """Selects all reasonable mutations for particular selected gene according to its occurrence in NCF rule.
@@ -129,7 +124,6 @@ class UpdateFunction:
 
         return mutations
 
-
     def mutate(self, num_of_genes: int, num_of_mutations: int, total_num_of_regulations: int) -> None:
         """Selects randomly given amount of regulators to be mutated, select possible mutations of each
         regulators, performs chosen mutations
@@ -146,7 +140,6 @@ class UpdateFunction:
                 continue
             getattr(self, choice(mutations))(regulator)
 
-
     def get_c_and_c_values(self, gene: int) -> Optional[Tuple[int, int]]:
         """Returns canalyzing and canalyzed value of particular gene id if occurred in given NCF rule
 
@@ -158,7 +151,6 @@ class UpdateFunction:
         except ValueError:
             return None
         return self.canalyzing[i], self.canalyzed[i]
-
 
     def get_nth_non_fixed_gene_index(self, n: int) -> int:
         """Returns id of nth non fixed regulator of given NCF rule
@@ -177,7 +169,6 @@ class UpdateFunction:
 
         return result
 
-
     def canalyzing_value_reversion(self, gene: int) -> None:
         """Reverts canalyzing value of given gene. Given NCF has to contain <gene>.
 
@@ -185,7 +176,6 @@ class UpdateFunction:
 
         i = self.indices.index(gene)
         self.canalyzing[i] = 1 - self.canalyzing[i]
-
 
     def canalyzed_value_reversion(self, gene: int) -> None:
         """Reverts canalyzed value of given gene. Given NCF has to contain <gene>.
@@ -195,7 +185,6 @@ class UpdateFunction:
         i = self.indices.index(gene)
         self.canalyzed[i] = 1 - self.canalyzed[i]
 
-
     def c_and_c_values_reversion(self, gene: int) -> None:
         """Reverts canalyzing and canalyzed values of given gene. Given NCF has to contain <gene>.
 
@@ -204,7 +193,6 @@ class UpdateFunction:
         i = self.indices.index(gene)
         self.canalyzing[i] = 1 - self.canalyzing[i]
         self.canalyzed[i] = 1 - self.canalyzed[i]
-
 
     def c_and_c_values_swapping(self, gene: int) -> None:
         """Swaps canalyzing and canalyzed values of given gene. Given NCF has to contain <gene>.
@@ -217,7 +205,6 @@ class UpdateFunction:
         self.canalyzed[i1], self.canalyzed[i2] = self.canalyzed[i2], self.canalyzed[i1]
         self.indices[i1], self.indices[i2] = self.indices[i2], self.indices[i1]
 
-
     def c_and_c_values_insertion(self, gene: int) -> None:
         """Inserts update rule of given gene with randomly generated canalyzing and canalyzed values. <gene> can not
         occur in given NCF before.
@@ -228,7 +215,6 @@ class UpdateFunction:
         self.canalyzing.insert(i, randint(0, 1))
         self.canalyzed.insert(i, randint(0, 1))
         self.indices.insert(i, gene)
-
 
     def c_and_c_values_removal(self, gene: int) -> None:
         """Removes canalyzing and canalyzed values of given gene. Given NCF has to contain <gene>.
