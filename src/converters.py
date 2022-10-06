@@ -1,6 +1,8 @@
 from re import sub
 from typing import Optional
-from classes import BooleanNetwork
+
+
+# import src.classes.BooleanNetwork as bn
 
 
 def zavorky(s):
@@ -54,9 +56,9 @@ def to_aeon(input_path, output_path):
                 if line[i] == ':':
                     break
 
-                if line[i].isdigit() and not line[i-1].isdigit():
+                if line[i].isdigit() and not line[i - 1].isdigit():
                     actual = get_num(line, i)
-                    bond = ">" if line[i-1] == ' ' else "|"
+                    bond = ">" if line[i - 1] == ' ' else "|"
                     lst.append("v_{0} -{1} v_{2}".format(actual, bond, base))
                     line = line[:i] + "v_" + line[i:]
                 i -= 1
@@ -97,7 +99,7 @@ def refine_spaces(line: str) -> str:
     return line
 
 
-def from_ncfs_to_aeon(bn: BooleanNetwork) -> str:
+def from_ncfs_to_aeon(bn) -> str:
     result = ""
     for i in range(len(bn.functions)):
         if not bn.functions[i].indices:  # empty update function
@@ -111,3 +113,6 @@ def from_ncfs_to_aeon(bn: BooleanNetwork) -> str:
         result += "{}\n".format(bn.functions[i])
 
     return result
+
+
+file_converter("test_network", "aeon")

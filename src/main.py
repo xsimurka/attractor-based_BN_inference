@@ -1,23 +1,41 @@
-from classes import *
-from parse_input import *
-from output import *
+from typing import List
+import src.utils as utils
+from src.classes.Regulation import Regulation
+from parse_input import read_input_matrix, read_input_constrains
+from output import output_to_directory
+from src.classes.BNInfo import BNInfo
 
 
 def main(sink_matrix_path: str, input_constraints_path: str, tsv: bool, threshold: float, best_ratio: float,
          num_of_nets: int, num_of_variables: int, num_of_genes: int, num_of_mutations: int, max_iter: int,
          max_fit: float, output_path: str):
+    """Entry point of the whole inference algorithm.
 
-    sinks: Dict[int, List[State]] = read_input_matrix(sink_matrix_path, tsv)  # DONE
-    input_constraints: Set[Regulation] = read_input_constrains(input_constraints_path, tsv)  # DONE
-    # derived_constraints: Set[Regulation] = derive_constraints(sinks, threshold)  # TODO
-    act_generation = create_initial_generation(num_of_nets, num_of_variables, input_constraints, set(), sinks)
+    :param sink_matrix_path        path to the file with steady-state matrix
+    :param input_constraints_path  path to the file with constraints
+    :param tsv                     True if files above use tab as separator, otherwise False
+    :param threshold               threshold for correlation constraints
+    :param best_ratio              how many % of best fitting BNs are automatically picked to the next generation
+    :param num_of_nets             number of networks in each generation
+    :param num_of_variables        number of variables of each network
+    :param num_of_genes            number of genes that are mutated in each generation
+    :param num_of_mutations        number of mutations performed on each mutated gene
+    :param max_iter                maximum number of iterations of genetic algorithm
+    :param max_fit                 when some network reach this fitness, algorithm ends immediately
+    :param output_path             path for directory containing output files"""
 
-    act_iter = 0
+    sinks: BNInfo = read_input_matrix(sink_matrix_path, num_of_variables, tsv)
+    input_constraints: List[Regulation] = read_input_constrains(input_constraints_path, tsv)
+    derived_constraints: List[Regulation] = sinks.derive_constraints(threshold)
+    act_generation = utils.create_initial_generation(num_of_nets, num_of_variables, input_constraints,
+                                                     derived_constraints, sinks)
+
+    act_iter = 1
     while True:
         print("Actual iteration: ", act_iter)
         act_generation.compute_fitness()
         print(act_generation.best)
-        if act_iter > max_iter or act_generation.best > max_fit:
+        if act_iter > max_iter or act_generation.best >= max_fit:
             output_to_directory(output_path, act_generation)
             return
 
