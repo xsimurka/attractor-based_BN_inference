@@ -29,12 +29,22 @@ class BNInfo:
         :param threshold  the value that the correlation must exceed in order to be suggested
         :return          list of suggested undirected regulations"""
 
+        print("Deriving constraints from gene-to-gene correlations...")
         derived_regulations: List[reg.Regulation] = list()
         for i in range(self.num_of_variables):
             for j in range(i + 1, self.num_of_variables, 1):
                 corr = self.calculate_correlation(i, j)
                 if abs(corr) >= threshold:
                     derived_regulations.append(reg.Regulation(i, j, corr > 0, False))
+        print(" done.")
+
+        if derived_regulations:
+            print("Derived non-direct regulations:")
+            for regulation in derived_regulations:
+                print("v_{} - v_{} sign: {}".format(regulation.source, regulation.target, regulation.sign))
+        else:
+            print("No derived regulations.")
+
         return derived_regulations
 
     def calculate_correlation(self, gene1: int, gene2: int) -> float:

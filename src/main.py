@@ -24,19 +24,27 @@ def main(sink_matrix_path: str, input_constraints_path: str, tsv: bool, threshol
     :param max_fit                 when some network reach this fitness, algorithm ends immediately
     :param output_path             path for directory containing output files"""
 
+    print("Start")
     sinks: BNInfo = read_input_matrix(sink_matrix_path, num_of_variables, tsv)
     input_constraints: List[Regulation] = read_input_constrains(input_constraints_path, tsv)
     derived_constraints: List[Regulation] = sinks.derive_constraints(threshold)
     act_generation = utils.create_initial_generation(num_of_nets, num_of_variables, input_constraints,
                                                      derived_constraints, sinks)
 
+    print("Starting genetic algorithm...")
     act_iter = 1
     while True:
         print("Actual iteration: ", act_iter)
+        print("Evaluating fitness...", end="")
         act_generation.compute_fitness()
-        print(act_generation.best)
+        print(" done.")
+        print("Best fitness of generation: {}".format(act_generation.best))
+        print()
         if act_iter > max_iter or act_generation.best >= max_fit:
+            print("Ending genetic algorithm...")
+            print("Writing best fitting networks to files...", end="")
             output_to_directory(output_path, act_generation)
+            print(" done.")
             return
 
         act_generation = act_generation.create_new_generation(num_of_genes, num_of_mutations, best_ratio)

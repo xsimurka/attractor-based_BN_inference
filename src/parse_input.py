@@ -14,11 +14,13 @@ def read_input_matrix(matrix_path: str, num_of_variables: int, tsv: bool) -> bn.
     :param tsv - True if matrix's delimiter is tab, False if semicolon is used
     :return dictionary where key is index of perturbed gene and value is set of corresponding steady states"""
 
+    print("Reading input steady states...", end='')
     target_bn_info = bn.BNInfo(num_of_variables)
     with open(matrix_path, "r") as matrix:
         for line in matrix:
             perturbed_gene, state = parse_line(line, tsv)
             get_experiment_state_list(target_bn_info, perturbed_gene, state).append(state)
+    print(" done.")
     return target_bn_info
 
 
@@ -41,12 +43,14 @@ def read_input_constrains(constraints_path: str, tsv: bool) -> List[reg.Regulati
     :param tsv               True if matrix's delimiter is tab, False if semicolon is used
     :return                  list of fixed regulations"""
 
+    print("Reading input constraints...", end="")
     with open(constraints_path, "r") as constraints:
         regulations: List[reg.Regulation] = list()
         for line in constraints:
             tmp = tuple(line.split(None if tsv else ";"))
             source, target, sign = int(tmp[0]), int(tmp[1]), True if tmp[2] == '+' else False
             regulations.append(reg.Regulation(source, target, sign, True))
+    print(" done.")
     return regulations
 
 

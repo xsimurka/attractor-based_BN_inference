@@ -36,12 +36,14 @@ def create_initial_generation(num_of_nets: int, num_of_variables: int, input_con
                                 the mutated gene, value contains the list of corresponding steady-state attractors
     :return                     instance of first generation"""
 
+    print("Creating initial generation...", end="")
     init_gen = gen.Generation(num_of_nets, num_of_variables, sinks)
     for net in init_gen.networks:
         net.initialize_ncfs(input_constraints)
         for regulation in choices(derived_constraints, k=ceil(len(derived_constraints) / init_gen.num_of_nets)):
             net.add_regulator(regulation, False)
     init_gen.mutate(1, 1)  # allows only one mutation on one gene in the initial generation
+    print(" done.")
     return init_gen
 
 
