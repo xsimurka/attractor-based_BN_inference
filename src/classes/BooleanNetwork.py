@@ -54,7 +54,7 @@ class BooleanNetwork:
             self.functions[gene].mutate(self.num_of_variables, num_of_mutations, self.total_num_of_regulations)
 
     def to_aeon_string(self, perturbed_gene: int, isolated_variables: Set[int],
-                       perturbation_state: Optional[bool] = None, ) -> str:
+                       perturbation_state: Optional[bool] = None) -> str:
         """Returns string representation of given BN in .aeon format. Dimension of the model can be reduced due
         to the existence of isolated variables that will not be included in attractor analysis.
 
@@ -106,7 +106,7 @@ class BooleanNetwork:
 
         return result
 
-    def get_isolated_variables(self, perturbed_gene: int):
+    def get_isolated_variables(self, perturbed_gene: int) -> Set[int]:
         """Returns set of isolated variables of given BN i.e., variables that have no regulators (inputs)
          and do not regulate any other variable (outputs) at the same time.
 
@@ -133,8 +133,3 @@ class BooleanNetwork:
                 output_variables.add(act_gene)
 
         return output_variables.intersection(input_variables)
-
-    def remove_perturbed_gene(self, perturbed_gene: int) -> bool:
-        if perturbed_gene == -1:
-            return False
-        return len(self.get_regulated_by(perturbed_gene)) > 0

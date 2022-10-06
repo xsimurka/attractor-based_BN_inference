@@ -1,5 +1,5 @@
 import src.utils as utils
-from src.detect import detect_steady_states, get_symbolic_async_graph, is_attractor_state
+from src.detect import detect_steady_states, get_model_computational_structures, is_attractor_state
 from src.classes.BooleanNetwork import BooleanNetwork
 from typing import Optional, List, Tuple
 from scipy.special import softmax
@@ -22,7 +22,7 @@ class Generation:
         target_sinks      steady-states observed from input data, which are targeted by the inference
         networks          list of <num_of_nets> instances of <BooleanNetwork> that Generation consists of
         scores            fitness score for each network from <networks> in [0; 1]
-                          describes how well the network fits the input data """
+                          describes how well the network fits the input data"""
 
     def __init__(self, num_of_nets: int, num_of_variables: int, target_sinks: bn.BNInfo,
                  nets: Optional[List[BooleanNetwork]] = None):
@@ -48,11 +48,12 @@ class Generation:
         :param num_of_mutations  number of mutations to be performed on each gene
         :param best_ratio        real number from range [0;1] determining percentage of best fitting networks
                                  that are picked automatically to the next generation
-        :return                  instance of new generation created """
+        :return                  instance of new generation created"""
 
         num_of_best = round(self.num_of_nets * best_ratio)
         best = pd.Series(self.scores).nlargest(num_of_best).index.values.tolist()  # indices of best nets in generation
         weights = list(softmax(np.array(self.scores)))  # probability distribution of picking nets to new generation
+
         # by setting <k> argument as follows, the new generations will contain the same number of nets as previous one
         picked = choices(range(self.num_of_nets), weights=weights, k=self.num_of_nets - num_of_best)
         new_gen = Generation(self.num_of_nets, self.num_of_variables, self.target_sinks,
@@ -104,7 +105,7 @@ class Generation:
         isolated_variables = self.networks[network_index].get_isolated_variables(perturbed_gene_index)
         aeon_model_string = self.networks[network_index].to_aeon_string(perturbed_gene_index, isolated_variables,
                                                                         perturbed_gene_state)
-        model, sag = get_symbolic_async_graph(aeon_model_string)
+        model, sag = get_model_computational_structures(aeon_model_string)
         target_sinks = self.get_target_sinks(perturbed_gene_index, perturbed_gene_state)
 
         if isolated_variables:  # reduce dimension of target sinks in order to match observed data dimension
@@ -113,16 +114,11 @@ class Generation:
         observed_sinks = detect_steady_states(sag)
         bpg = bg.BipartiteGraph(target_sinks, observed_sinks)
         cost, pairs = bpg.minimal_weighted_assignment()
-        dimension = self.num_of_variables - len(isolated_variables)
-        # weight of one variable in one state is computed as:
-        # number of overlapping state tuples + number of overhanging states, multiplied by dimension of reduced model
-        # therefore, each assigned tuple of states "behaves as one" and has weight equal to their reduced dimension and
-        # each overhanging state alone has weight equal to its reduced dimension, one variable thus, have weight equal to
-        # 1 / total number of variables where matching tuple of variables act as one
-        matching_variables = 0
+        dimension = self.num_of_variables - len(isolated_variables)  # number of variables in each state after reduction
+        matching_variables = 0  # variable = one element of a state
 
         # if some states were matched, then total number of matching variables is equal to total number of variable
-        # pairs minus cost (variables that do not match), else it stays equal to 0 (initial value)
+        # pairs minus cost (total number of variables that do not match), else it stays equal to 0 (initial value)
         if cost is not None:
             matching_variables += (min(len(target_sinks), len(observed_sinks)) * dimension) - cost
 
@@ -149,6 +145,7 @@ class Generation:
 
     def get_target_sinks(self, perturbed_gene_index: int, perturbed_gene_state: Optional[bool] = None) -> List[State]:
         """Returns list of states of specific experiment from input data.
+
         :param perturbed_gene_index  index of perturbed gene
         :param perturbed_gene_state  True if over-expression is desired
                                      False if knock-out is desired

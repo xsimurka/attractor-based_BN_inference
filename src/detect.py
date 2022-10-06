@@ -1,4 +1,3 @@
-# Third party code
 # Author: RNDr. Samuel Pastva, Ph.D.
 
 
@@ -8,7 +7,7 @@ from typing import List, Tuple
 State = Tuple[bool]
 
 
-def get_symbolic_async_graph(model_string) -> Tuple[BooleanNetwork, SymbolicAsyncGraph]:
+def get_model_computational_structures(model_string) -> Tuple[BooleanNetwork, SymbolicAsyncGraph]:
     """Precomputes model computational structures from string representation, which is essential for iterative approach
     :param model_string  string representation of Boolean model
     :return              tuple of computational structures of given model"""

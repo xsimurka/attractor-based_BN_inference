@@ -27,7 +27,7 @@ class BNInfo:
         <threshold> then suggests such regulation to be added later during the inference.
 
         :param threshold  the value that the correlation must exceed in order to be suggested
-         "returns         list of suggested undirected regulations"""
+        :return          list of suggested undirected regulations"""
 
         derived_regulations: List[reg.Regulation] = list()
         for i in range(self.num_of_variables):
@@ -50,6 +50,7 @@ class BNInfo:
 
     def get_gene_sinks_values(self, gene: int) -> List[bool]:
         """Returns vector of boolean values of given <gene> over all the input experiments.
+
         :param gene  index of gene
         :return vector of its boolean values"""
 
