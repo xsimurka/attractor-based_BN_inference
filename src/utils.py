@@ -23,25 +23,25 @@ def generate_rule(sign: Optional[bool]) -> Tuple[int, int]:
     return choice([(1, 1), (0, 0)] if sign else [(0, 1), (1, 0)])
 
 
-def create_initial_generation(num_of_nets: int, num_of_variables: int, input_constraints: List[reg.Regulation],
-                              derived_constraints: List[reg.Regulation], sinks: bn.BNInfo) -> gen.Generation:
+def create_initial_generation(num_of_nets: int, input_constraints: Set[reg.Regulation],
+                              derived_constraints: Set[reg.Regulation], target_bn_info: bn.BNInfo) -> gen.Generation:
     """Creates the initial generation using regulations observed from input and derived constraints. Each BN is then
     mutated only once on one gene.
 
     :param num_of_nets          number of nets in generation
-    :param num_of_variables     number of gene variables of each BN
     :param input_constraints    constraints specified in input file
     :param derived_constraints  constraints derived by gene-to-gene correlation
-    :param sinks                target steady-state attractors specified in the input file, key corresponds to
-                                the mutated gene, value contains the list of corresponding steady-state attractors
+    :param target_bn_info       information about target BN
     :return                     instance of first generation"""
 
-    init_gen = gen.Generation(num_of_nets, num_of_variables, sinks)
+    print("Creating initial generation...", end="")
+    init_gen = gen.Generation(num_of_nets, target_bn_info)
     for net in init_gen.networks:
         net.initialize_ncfs(input_constraints)
-        for regulation in choices(derived_constraints, k=ceil(len(derived_constraints) / init_gen.num_of_nets)):
+        for regulation in choices(list(derived_constraints), k=ceil(len(derived_constraints) / init_gen.num_of_nets)):
             net.add_regulator(regulation, False)
     init_gen.mutate(1, 1)  # allows only one mutation on one gene in the initial generation
+    print(" done.")
     return init_gen
 
 

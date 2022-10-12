@@ -1,5 +1,6 @@
 from random import randint, choices, choice
 from typing import Tuple, Optional, List
+import src.classes.BNInfo as bn
 
 
 class UpdateFunction:
@@ -13,9 +14,9 @@ class UpdateFunction:
         indices     ids of genes that regulates <gene>
         fixed       set of fixed regulators of actual gene"""
 
-    def __init__(self, gene: int, max_arity):
+    def __init__(self, gene: int, target_bn_info: bn.BNInfo):
         self.gene = gene
-        self.max_arity = max_arity
+        self.target_bn_info = target_bn_info
         self.canalyzing = []
         self.canalyzed = []
         self.indices = []
@@ -119,20 +120,20 @@ class UpdateFunction:
             if self.get_c_and_c_values(gene) in {(0, 1), (1, 0)}:
                 mutations.append("c_and_c_values_reversion")
 
-        elif total_num_of_regulations < (self.max_arity ** 2) / 2:  # restricted number of regulations in network
+        elif total_num_of_regulations < (self.target_bn_info.num_of_vars ** 2) / 2:  # restricted number of regulations in network
             mutations.append("c_and_c_values_insertion")
 
         return mutations
 
-    def mutate(self, num_of_genes: int, num_of_mutations: int, total_num_of_regulations: int) -> None:
+    def mutate(self, num_of_mutations: int, total_num_of_regulations: int) -> None:
         """Selects randomly given amount of regulators to be mutated, select possible mutations of each
         regulators, performs chosen mutations
 
-        :param num_of_genes              total number of genes in BN
-        :param total_num_of_regulations  total number of regulations in the whole network
-        :param num_of_mutations          number of mutations to be done"""
+        :param num_of_mutations          number of mutations to be done
+        :param total_num_of_regulations  total number of regulations in the whole network"""
 
-        regulators_to_mutate = choices(range(num_of_genes), k=num_of_mutations)
+        non_output_genes = list(set(range(self.target_bn_info.num_of_vars)) - self.target_bn_info.output_genes)
+        regulators_to_mutate = choices(non_output_genes, k=num_of_mutations)
 
         for regulator in regulators_to_mutate:
             mutations = self.select_possible_mutations(regulator, total_num_of_regulations)
@@ -195,7 +196,7 @@ class UpdateFunction:
         self.canalyzed[i] = 1 - self.canalyzed[i]
 
     def c_and_c_values_swapping(self, gene: int) -> None:
-        """Swaps canalyzing and canalyzed values of given gene. Given NCF has to contain <gene>.
+        """Swaps canalyzing and canalyzed values of given gene. Given NCF has to contain <gene> and one more regulator.
 
         :param gene  id of gene"""
 

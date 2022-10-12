@@ -18,19 +18,18 @@ class Generation:
 
     Attributes:
         num_of_nets       number of networks in generation
-        num_of_variables  number of gene variables in each network
         target_sinks      steady-states observed from input data, which are targeted by the inference
         networks          list of <num_of_nets> instances of <BooleanNetwork> that Generation consists of
         scores            fitness score for each network from <networks> in [0; 1]
                           describes how well the network fits the input data"""
 
-    def __init__(self, num_of_nets: int, num_of_variables: int, target_sinks: bn.BNInfo,
+    def __init__(self, num_of_nets: int, target_bn_info: bn.BNInfo,
                  nets: Optional[List[BooleanNetwork]] = None):
         self.num_of_nets = num_of_nets
-        self.num_of_variables = num_of_variables
-        self.target_sinks = target_sinks
+        self.target_bn_info = target_bn_info
+
         if nets is None:
-            self.networks = [BooleanNetwork(num_of_variables) for _ in range(num_of_nets)]
+            self.networks = [BooleanNetwork(target_bn_info) for _ in range(num_of_nets)]
         else:
             self.networks = list(map(deepcopy, nets))  # due to a possibility of picking the same 2 network instances
         self.scores = [0.0 for _ in range(num_of_nets)]
@@ -56,7 +55,7 @@ class Generation:
 
         # by setting <k> argument as follows, the new generations will contain the same number of nets as previous one
         picked = choices(range(self.num_of_nets), weights=weights, k=self.num_of_nets - num_of_best)
-        new_gen = Generation(self.num_of_nets, self.num_of_variables, self.target_sinks,
+        new_gen = Generation(self.num_of_nets, self.target_bn_info,
                              [self.networks[i] for i in best] + [self.networks[i] for i in picked])
         new_gen.mutate(num_of_mut_genes, num_of_mutations)
         return new_gen
@@ -79,15 +78,15 @@ class Generation:
 
             total_score += self.evaluate_fitness(i, -1)
 
-            for j in sorted(self.target_sinks.ko_sinks.keys()):
+            for j in sorted(self.target_bn_info.ko_sinks.keys()):
                 total_score += self.evaluate_fitness(i, j, False)
 
             for j in sorted(
-                    self.target_sinks.oe_sinks.keys()):  # iterates over perturbed gene indices of all experiments
+                    self.target_bn_info.oe_sinks.keys()):  # iterates over perturbed gene indices of all experiments
                 total_score += self.evaluate_fitness(i, j, True)
 
             # final net's score is average score of all experiments
-            self.scores[i] = total_score / (len(self.target_sinks.ko_sinks) + len(self.target_sinks.oe_sinks) + 1)
+            self.scores[i] = total_score / (len(self.target_bn_info.ko_sinks) + len(self.target_bn_info.oe_sinks) + 1)
 
     def evaluate_fitness(self, network_index: int, perturbed_gene_index: int,
                          perturbed_gene_state: Optional[bool] = None) -> float:
@@ -99,8 +98,7 @@ class Generation:
         :param perturbed_gene_state   True if current experiment is over-expression of <perturbed_gene_index>
                                       False if current experiment is knock-out of <perturbed_gene_index>
                                       None if current experiment is wild-type
-        :return                       real number from [0;1] that determines BN's fitness to input data
-        """
+        :return                       real number from [0;1] that determines BN's fitness to input data"""
 
         isolated_variables = self.networks[network_index].get_isolated_variables(perturbed_gene_index)
         aeon_model_string = self.networks[network_index].to_aeon_string(perturbed_gene_index, isolated_variables,
@@ -114,7 +112,7 @@ class Generation:
         observed_sinks = detect_steady_states(sag)
         bpg = bg.BipartiteGraph(target_sinks, observed_sinks)
         cost, pairs = bpg.minimal_weighted_assignment()
-        dimension = self.num_of_variables - len(isolated_variables)  # number of variables in each state after reduction
+        dimension = self.target_bn_info.num_of_vars - len(isolated_variables)  # number of variables in each state after reduction
         matching_variables = 0  # variable = one element of a state
 
         # if some states were matched, then total number of matching variables is equal to total number of variable
@@ -126,8 +124,7 @@ class Generation:
             # some steady-states from data were not reached by actual model, which is problematic because such
             # model can not capture desired behaviour specified by the input data
             # total_variables is therefore, equal to number of variable pairs plus number of unpaired variables
-            total_variables = (abs(len(target_sinks) - len(observed_sinks)) + min(len(target_sinks),
-                                                                                  len(observed_sinks))) * dimension
+            total_variables = len(target_sinks) * dimension
             unmatched_states = utils.get_unmatched_states(bpg, pairs, target_sinks, position=0)
             # check if missing steady-states are on some other type of attractor because there is possibility of
             # breaking such attractor to steady-state by tiny mutation of actual BN
@@ -153,7 +150,7 @@ class Generation:
         :return                      list of states of specified experiment from the input data"""
 
         if perturbed_gene_index == -1:
-            return self.target_sinks.wt_sinks
+            return self.target_bn_info.wt_sinks
 
-        return (self.target_sinks.oe_sinks if perturbed_gene_state else self.target_sinks.ko_sinks)[
+        return (self.target_bn_info.oe_sinks if perturbed_gene_state else self.target_bn_info.ko_sinks)[
             perturbed_gene_index]

@@ -3,18 +3,20 @@ from random import choices
 from src.classes.UpdateFunction import UpdateFunction
 from src.classes.Regulation import Regulation
 import src.utils as utils
+import src.classes.BNInfo as bn
 
 
 class BooleanNetwork:
     """Class represents Boolean network (BN)
 
     Attributes:
-        num_of_variables  number of network's Boolean variables
+        num_of_vars       number of network's Boolean variables
         functions         list of <num_of_variables> update functions in the form of NCFs"""
 
-    def __init__(self, num_of_variables: int):
-        self.num_of_variables: int = num_of_variables
-        self.functions: List[UpdateFunction] = [UpdateFunction(i, num_of_variables) for i in range(num_of_variables)]
+    def __init__(self, target_bn_info: bn.BNInfo):
+        self.target_bn_info = target_bn_info
+        self.functions: List[UpdateFunction] = [UpdateFunction(i, target_bn_info) for i in
+                                                range(target_bn_info.num_of_vars)]
 
     @property
     def total_num_of_regulations(self):
@@ -49,9 +51,10 @@ class BooleanNetwork:
         :param num_of_genes      number of genes to be mutated
         :param num_of_mutations  number of mutations to be performed on each gene"""
 
-        genes_to_mutate = choices(range(self.num_of_variables), k=num_of_genes)
+        non_input_genes = list(set(range(self.target_bn_info.num_of_vars)) - self.target_bn_info.input_genes)
+        genes_to_mutate = choices(non_input_genes, k=num_of_genes)
         for gene in genes_to_mutate:
-            self.functions[gene].mutate(self.num_of_variables, num_of_mutations, self.total_num_of_regulations)
+            self.functions[gene].mutate(num_of_mutations, self.total_num_of_regulations)
 
     def to_aeon_string(self, perturbed_gene: int, isolated_variables: Set[int],
                        perturbation_state: Optional[bool] = None) -> str:
@@ -67,8 +70,8 @@ class BooleanNetwork:
         model_string = str()
 
         # adds all meaningful regulations to the model
-        for i in range(self.num_of_variables):  # iterates over functions of given BN
-            # perturbed gene acts as fixed input node therefore, its original regulations are skipped
+        for i in range(self.target_bn_info.num_of_vars):  # iterates over functions of given BN
+            # perturbed gene acts as fixed input node therefore, its original regulators are skipped
             if i == perturbed_gene:
                 continue
 
@@ -77,7 +80,7 @@ class BooleanNetwork:
                 model_string += "v_{} -{} v_{}\n".format(self.functions[i].indices[j], reg_type, i)
 
         # adds all meaningful logic update functions to the model
-        for i in range(self.num_of_variables):
+        for i in range(self.target_bn_info.num_of_vars):
 
             if i not in isolated_variables:  # isolated variables are not added at all
 
@@ -99,7 +102,7 @@ class BooleanNetwork:
         :return      set of genes regulated by given gene"""
 
         result = set()
-        for i in range(self.num_of_variables):
+        for i in range(self.target_bn_info.num_of_vars):
             for j in self.functions[i].indices:
                 if gene == j:
                     result.add(i)
@@ -117,12 +120,12 @@ class BooleanNetwork:
         output_variables = set()
 
         # input variables
-        for act_gene in range(self.num_of_variables):
+        for act_gene in range(self.target_bn_info.num_of_vars):
             if not self.functions[act_gene].indices:  # only genes that have empty update function are inputs
                 input_variables.add(act_gene)
 
         # output variables
-        for act_gene in range(self.num_of_variables):
+        for act_gene in range(self.target_bn_info.num_of_vars):
             regulates = self.get_regulated_by(act_gene)
 
             # gene is an output variable iff it regulates either no other genes or only perturbed gene (this regulation
