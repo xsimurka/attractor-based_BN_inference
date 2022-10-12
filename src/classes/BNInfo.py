@@ -63,7 +63,7 @@ class BNInfo:
         """
 
         """
-        
+
         if gene1 in self.input_genes and gene2 in self.input_genes:
             return None
         if gene1 in self.output_genes and gene2 in self.output_genes:
