@@ -6,7 +6,7 @@ from output import output_to_directory
 from src.classes.BNInfo import BNInfo
 
 
-def main(sink_matrix_path: str, input_constraints_path: str, tsv: bool, threshold: float, best_ratio: float,
+def main(sink_matrix_path: str, input_constraints_path: str, tsv: bool, threshold: float, elite_ratio: float,
          num_of_nets: int, num_of_variables: int, num_of_genes: int, num_of_mutations: int, max_iter: int,
          max_fit: float, output_path: str, inputs: Set[int], outputs: Set[int], net_index: int, x):
     """Entry point of the whole inference algorithm.
@@ -15,7 +15,7 @@ def main(sink_matrix_path: str, input_constraints_path: str, tsv: bool, threshol
     :param input_constraints_path  path to the file with constraints
     :param tsv                     True if files above use tab as separator, otherwise False
     :param threshold               threshold for correlation constraints
-    :param best_ratio              how many % of best fitting BNs are automatically picked to the next generation
+    :param elite_ratio              how many % of best fitting BNs are automatically picked to the next generation
     :param num_of_nets             number of networks in each generation
     :param num_of_variables        number of variables of each network
     :param num_of_genes            number of genes that are mutated in each generation
@@ -51,7 +51,7 @@ def main(sink_matrix_path: str, input_constraints_path: str, tsv: bool, threshol
             print(" done.")
             return
 
-        act_generation = act_generation.create_new_generation(num_of_genes, num_of_mutations, best_ratio)
+        act_generation = act_generation.create_new_generation(num_of_genes, num_of_mutations, elite_ratio)
         act_iter += 1
 
 

@@ -36,34 +36,37 @@ class Generation:
 
         return max(self.scores)
 
-    def create_new_generation(self, num_of_mut_genes: int, num_of_mutations: int, best_ratio: float) -> 'Generation':
+    def create_new_generation(self, num_of_mut_genes: int, num_of_mutations: int, elite_ratio: float) -> 'Generation':
         """Creates new generation of genetic algorithm by picking and mutating best BNs from the previous generation.
 
         :param num_of_mut_genes  number of genes to be mutated in each picked network
         :param num_of_mutations  number of mutations to be performed on each gene
-        :param best_ratio        real number from range [0;1] determining percentage of best fitting networks
+        :param elite_ratio        real number from range [0;1] determining percentage of best fitting networks
                                  that are picked automatically to the next generation
         :return                  instance of new generation created"""
 
-        num_of_best = round(self.num_of_nets * best_ratio)
-        best = pd.Series(self.scores).nlargest(num_of_best).index.values.tolist()  # indices of best nets in generation
+        scores = pd.Series(self.scores)
+        num_of_elite = round(self.num_of_nets * elite_ratio)
+        elite = scores.nlargest(num_of_elite).index.values.tolist()  # indices of best nets in generation
+        best = scores[scores == self.best].index.values.tolist()
         weights = list(softmax(np.array(self.scores)))  # probability distribution of picking nets to new generation
-
         # by setting <k> argument as follows, the new generations will contain the same number of nets as previous one
-        picked = choices(range(self.num_of_nets), weights=weights, k=self.num_of_nets - num_of_best)
+        picked = choices(range(self.num_of_nets), weights=weights, k=self.num_of_nets - num_of_elite)
         new_gen = Generation(self.num_of_nets, self.target_bn_info,
-                             [self.networks[i] for i in best] + [self.networks[i] for i in picked])
-        new_gen.mutate(num_of_mut_genes, num_of_mutations)
+                             [self.networks[i] for i in elite] + [self.networks[i] for i in picked])
+        new_gen.mutate(num_of_mut_genes, num_of_mutations, best)
         return new_gen
 
-    def mutate(self, num_of_genes: int, num_of_mutations: int) -> None:
+    def mutate(self, num_of_genes: int, num_of_mutations: int, best_indices: List[int]) -> None:
         """Mutates given number of genes of each BN of given generation by given number of mutations
 
         :param num_of_genes      number of genes to be mutated
-        :param num_of_mutations  number of mutations to be performed on each gene"""
+        :param num_of_mutations  number of mutations to be performed on each gene
+        :param best_indices      indices of best networks in the previous generation"""
 
-        for net in self.networks:
-            net.mutate(num_of_genes, num_of_mutations)
+        for i in range(len(self.networks)):
+            if i not in best_indices:
+                self.networks[i].mutate(num_of_genes, num_of_mutations)
 
     def compute_fitness(self):
         """Computes fitness of each BN of given generation comparing to target network described by the input data.

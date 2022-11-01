@@ -40,7 +40,7 @@ def create_initial_generation(num_of_nets: int, input_constraints: Set[reg.Regul
         net.initialize_ncfs(input_constraints)
         for regulation in choices(list(derived_constraints), k=ceil(len(derived_constraints) / init_gen.num_of_nets)):
             net.add_regulator(regulation, False)
-    init_gen.mutate(1, 1)  # allows only one mutation on one gene in the initial generation
+    init_gen.mutate(1, 1, [])  # allows only one mutation on one gene in the initial generation
     print(" done.")
     return init_gen
 
