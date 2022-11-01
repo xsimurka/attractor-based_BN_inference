@@ -31,13 +31,16 @@ class BooleanNetwork:
 
         return sum(map(lambda x: x.arity, self.functions))
 
-    def initialize_ncfs(self, regulators: List[Regulation]) -> None:
-        """Initializes NCF rules of given BN by using set of fixed regulations that can not be changed
+    def initialize_ncfs(self, fixed_regulations: List[Regulation], non_fixed_regulations: List[Regulation]) -> None:
+        """Initializes NCF rules of given BN by using sets of fixed and non-fixed regulations.
 
-        :param regulators  set of fixed regulations that can not be changed"""
+        :param fixed_regulations      set of fixed regulations that can not be changed
+        :param non_fixed_regulations  set of non-fixed regulations that can be changed"""
 
-        for regulation in regulators:
+        for regulation in fixed_regulations:
             self.add_regulator(regulation, True)
+        for regulation in non_fixed_regulations:
+            self.add_regulator(regulation, False)
 
     def add_regulator(self, regulation: Regulation, fixed: bool, position: Optional[int] = None) -> None:
         """Adds new regulation to target gene specified in <regulation> on a specific position
