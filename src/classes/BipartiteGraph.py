@@ -8,21 +8,20 @@ class BipartiteGraph:
     """Class represents instance of bipartite graph used for m-to-n comparison of BN attractors
 
     Attributes:
-        target     vertices representing target steady-states (from input data)
-        observed   vertices representing observed steady-states (from attractor analysis)
-        distances  matrix m*n representing edges between each pair of target-observed steady-state
+        target     Boolean vertices representing target steady-states (from input data)
+        observed   Boolean vertices representing observed steady-states (from attractor analysis)
+        distances  matrix m*n representing edges between each pair of target-observed steady-state,
                    value distances[m][n] represent distance between m-th observed and n-th target steady-state"""
 
     def __init__(self, target_sinks, observed_sinks):
         self.target = target_sinks
         self.observed = observed_sinks
-        # 2D array target x observed - distances[y][x] denotes manhattan dst between x-th target and y-th observed sink
         self.distances: List[List[Optional[int]]] = [[None] * len(self.target) for _ in range(len(self.observed))]
-        self.calculate_distances()
+        self.set_distances()
 
-    def calculate_distances(self):
-        """Calculate distances between all pairs observed-target steady-state. Sets .distances matrix
-        Distance between two states is equal to their Manhattan distance."""
+    def set_distances(self):
+        """Calculate distances between all pairs observed-target steady-state. Sets .distances matrix.
+        Distance between two states is equal to their Manhattan distance"""
 
         for i in range(len(self.observed)):
             for j in range(len(self.target)):
@@ -31,7 +30,7 @@ class BipartiteGraph:
     def minimal_weighted_assignment(self) -> Tuple[Optional[int], List[Tuple[int, int]]]:
         """Calculates minimal weighted assignment of given (possibly unbalanced) bipartite graph
 
-        :return tuple  cost of minimal assignment, list of tuples of matching target-observed sink index pairs"""
+        :return   tuple cost of minimal assignment, list of tuples of matching target-observed sink index pairs"""
 
         if not self.observed or not self.target:
             return None, []

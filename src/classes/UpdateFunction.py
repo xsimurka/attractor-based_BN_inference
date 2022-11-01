@@ -1,3 +1,4 @@
+from copy import deepcopy
 from random import randint, choices, choice
 from typing import Tuple, Optional, List
 import src.classes.BNInfo as bn
@@ -7,30 +8,38 @@ class UpdateFunction:
     """Class represents boolean update rule in the form of Nested Canalyzing Function (NCF)
 
     Attributes:
-        gene        id of regulated gene
-        max_arity   total number of gene variables in BN i.e., maximum arity of the function
-        canalyzing  canalyzing values
-        canalyzed   canalyzed values
-        indices     ids of genes that regulates <gene>
-        fixed       set of fixed regulators of actual gene"""
+        gene            id of regulated gene
+        target_bn_info  object that holds the information about target BN
+        canalyzing      canalyzing values
+        canalyzed       canalyzed values
+        regulators      ids of genes that regulates <gene>
+        fixed           set of fixed regulators of actual gene"""
 
     def __init__(self, gene: int, target_bn_info: bn.BNInfo):
         self.gene = gene
         self.target_bn_info = target_bn_info
         self.canalyzing = []
         self.canalyzed = []
-        self.indices = []
+        self.regulators = []
         self.fixed = set()
+
+    def __deepcopy__(self):
+        result: UpdateFunction = UpdateFunction(self.gene, self.target_bn_info)
+        result.canalyzed = deepcopy(self.canalyzed)
+        result.canalyzing = deepcopy(self.canalyzing)
+        result.regulators = deepcopy(self.regulators)
+        result.fixed = deepcopy(self.fixed)
+        return result
 
     @property
     def non_fixed(self) -> int:
         """Number of non fixed regulators"""
-        return len(self.indices) - len(self.fixed)
+        return len(self.regulators) - len(self.fixed)
 
     @property
     def arity(self) -> int:
         """Actual number of regulators"""
-        return len(self.indices)
+        return len(self.regulators)
 
     def to_aeon_string(self) -> str:
         """Returns string representation of given NCF in .aeon format
@@ -41,12 +50,12 @@ class UpdateFunction:
             return str()
 
         # the most nested regulator will not have brackets around
-        function_string = "{}v_{}".format("" if self.canalyzing[-1] == self.canalyzed[-1] else "!", self.indices[-1])
+        function_string = "{}v_{}".format("" if self.canalyzing[-1] == self.canalyzed[-1] else "!", self.regulators[-1])
 
         for i in reversed(range(self.arity - 1)):  # without the last regulator already
             logic_operator = "&" if self.canalyzed[i] == 0 else "|"
             parity = "" if self.canalyzing[i] == self.canalyzed[i] else "!"
-            function_string = "({}v_{} {} ".format(parity, self.indices[i], logic_operator) + function_string + ")"
+            function_string = "({}v_{} {} ".format(parity, self.regulators[i], logic_operator) + function_string + ")"
 
         return "$v_{}:{}".format(self.gene, function_string)
 
@@ -60,9 +69,9 @@ class UpdateFunction:
                          if None, it is appended to the last position in NCF rule"""
 
         if position is None:
-            self.indices.append(gene)
+            self.regulators.append(gene)
         else:
-            self.indices.insert(position, gene)
+            self.regulators.insert(position, gene)
         if fixed:
             self.fixed.add(gene)
 
@@ -98,7 +107,7 @@ class UpdateFunction:
 
         return not bool(self.canalyzed[-1])
 
-    def select_possible_mutations(self, gene: int, total_num_of_regulations: int) -> List[str]:
+    def select_reasonable_mutations(self, gene: int, total_num_of_regulations: int) -> List[str]:
         """Selects all reasonable mutations for particular selected gene according to its occurrence in NCF rule.
         Leaves possibility that no mutation is available - if all regulations of picked gene are fixed and model is
         already too dense.
@@ -108,7 +117,7 @@ class UpdateFunction:
         :return                          list of possible mutations that are reasonable to be done on given gene"""
 
         mutations = []
-        if gene in self.indices:
+        if gene in self.regulators:
             if self.arity >= 2:
                 mutations.append("c_and_c_values_swapping")
 
@@ -120,7 +129,8 @@ class UpdateFunction:
             if self.get_c_and_c_values(gene) in {(0, 1), (1, 0)}:
                 mutations.append("c_and_c_values_reversion")
 
-        elif total_num_of_regulations < (self.target_bn_info.num_of_vars ** 2) / 2:  # restricted number of regulations in network
+        elif total_num_of_regulations < (
+                self.target_bn_info.num_of_vars ** 2) / 4:  # restricted number of regulations in network
             mutations.append("c_and_c_values_insertion")
 
         return mutations
@@ -136,10 +146,9 @@ class UpdateFunction:
         regulators_to_mutate = choices(non_output_genes, k=num_of_mutations)
 
         for regulator in regulators_to_mutate:
-            mutations = self.select_possible_mutations(regulator, total_num_of_regulations)
-            if not mutations:
-                continue
-            getattr(self, choice(mutations))(regulator)
+            mutations = self.select_reasonable_mutations(regulator, total_num_of_regulations)
+            if mutations:
+                getattr(self, choice(mutations))(regulator)
 
     def get_c_and_c_values(self, gene: int) -> Optional[Tuple[int, int]]:
         """Returns canalyzing and canalyzed value of particular gene id if occurred in given NCF rule
@@ -148,7 +157,7 @@ class UpdateFunction:
         :return      tuple with canalyzing and canalyzed value if gene occurs in given NCF rule, otherwise None"""
 
         try:
-            i = self.indices.index(gene)
+            i = self.regulators.index(gene)
         except ValueError:
             return None
         return self.canalyzing[i], self.canalyzed[i]
@@ -165,7 +174,7 @@ class UpdateFunction:
 
         while n > 0:
             result += 1
-            if self.indices[result] not in self.fixed:
+            if self.regulators[result] not in self.fixed:
                 n -= 1
 
         return result
@@ -175,7 +184,7 @@ class UpdateFunction:
 
         :param gene  id of gene"""
 
-        i = self.indices.index(gene)
+        i = self.regulators.index(gene)
         self.canalyzing[i] = 1 - self.canalyzing[i]
 
     def canalyzed_value_reversion(self, gene: int) -> None:
@@ -183,7 +192,7 @@ class UpdateFunction:
 
         :param gene  id of gene"""
 
-        i = self.indices.index(gene)
+        i = self.regulators.index(gene)
         self.canalyzed[i] = 1 - self.canalyzed[i]
 
     def c_and_c_values_reversion(self, gene: int) -> None:
@@ -191,7 +200,7 @@ class UpdateFunction:
 
         :param gene  id of gene"""
 
-        i = self.indices.index(gene)
+        i = self.regulators.index(gene)
         self.canalyzing[i] = 1 - self.canalyzing[i]
         self.canalyzed[i] = 1 - self.canalyzed[i]
 
@@ -200,11 +209,11 @@ class UpdateFunction:
 
         :param gene  id of gene"""
 
-        i1 = self.indices.index(gene)
+        i1 = self.regulators.index(gene)
         i2 = choice(list(set(range(self.arity)) - {i1}))  # picks another index different from <i1>
         self.canalyzing[i1], self.canalyzing[i2] = self.canalyzing[i2], self.canalyzing[i1]
         self.canalyzed[i1], self.canalyzed[i2] = self.canalyzed[i2], self.canalyzed[i1]
-        self.indices[i1], self.indices[i2] = self.indices[i2], self.indices[i1]
+        self.regulators[i1], self.regulators[i2] = self.regulators[i2], self.regulators[i1]
 
     def c_and_c_values_insertion(self, gene: int) -> None:
         """Inserts update rule of given gene with randomly generated canalyzing and canalyzed values. <gene> can not
@@ -215,14 +224,14 @@ class UpdateFunction:
         i = randint(0, self.arity)
         self.canalyzing.insert(i, randint(0, 1))
         self.canalyzed.insert(i, randint(0, 1))
-        self.indices.insert(i, gene)
+        self.regulators.insert(i, gene)
 
     def c_and_c_values_removal(self, gene: int) -> None:
         """Removes canalyzing and canalyzed values of given gene. Given NCF has to contain <gene>.
 
         :param gene  id of gene"""
 
-        i = self.indices.index(gene)
+        i = self.regulators.index(gene)
         self.canalyzing.pop(i)
         self.canalyzed.pop(i)
-        self.indices.pop(i)
+        self.regulators.pop(i)

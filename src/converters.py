@@ -102,12 +102,12 @@ def refine_spaces(line: str) -> str:
 def from_ncfs_to_aeon(bn) -> str:
     result = ""
     for i in range(len(bn.functions)):
-        if not bn.functions[i].indices:  # empty update function
+        if not bn.functions[i].regulators:  # empty update function
             result += "#position:v_{0}:0,0\n".format(i)
             continue
-        for j in range(len(bn.functions[i].indices)):
+        for j in range(len(bn.functions[i].regulators)):
             bond = ">" if bn.functions[i].canalyzing[j] == bn.functions[i].canalyzed[j] else "|"
-            result += "v_{0} -{1} v_{2}\n".format(bn.functions[i].indices[j], bond, i)
+            result += "v_{0} -{1} v_{2}\n".format(bn.functions[i].regulators[j], bond, i)
 
     for i in range(len(bn.functions)):
         result += "{}\n".format(bn.functions[i])

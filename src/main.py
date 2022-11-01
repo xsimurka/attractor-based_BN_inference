@@ -8,7 +8,7 @@ from src.classes.BNInfo import BNInfo
 
 def main(sink_matrix_path: str, input_constraints_path: str, tsv: bool, threshold: float, best_ratio: float,
          num_of_nets: int, num_of_variables: int, num_of_genes: int, num_of_mutations: int, max_iter: int,
-         max_fit: float, output_path: str, inputs: Set[int], outputs: Set[int], net_index: int):
+         max_fit: float, output_path: str, inputs: Set[int], outputs: Set[int], net_index: int, x):
     """Entry point of the whole inference algorithm.
 
     :param sink_matrix_path        path to the file with steady-state matrix
@@ -25,7 +25,8 @@ def main(sink_matrix_path: str, input_constraints_path: str, tsv: bool, threshol
     :param output_path             path for directory containing output files
     :param inputs                  set of input nodes i.e., nodes that are not regulated by other genes
     :param outputs                 set of output nodes i.e., nodes that do not regulate other genes
-    :param net_index               index of input net """
+    :param net_index               index of input net
+    :TODO spravit vela instancii toho isteho problemu (nastavenie) skumat statisticky kazdu kranu kolko krat sa objavila"""
 
     print("Start")
     target_bn_info: BNInfo = read_input_matrix(sink_matrix_path, num_of_variables, tsv, inputs, outputs)
@@ -43,10 +44,10 @@ def main(sink_matrix_path: str, input_constraints_path: str, tsv: bool, threshol
         print(" done.")
         print("Best fitness of generation: {}".format(act_generation.best))
         print()
-        if act_iter > max_iter or act_generation.best >= max_fit:
+        if act_iter >= max_iter or act_generation.best >= max_fit:
             print("Ending genetic algorithm...")
             print("Writing best fitting networks to files...", end="")
-            output_to_directory(output_path, act_generation, num_of_variables, net_index)
+            output_to_directory(output_path, act_generation, num_of_variables, net_index, x)
             print(" done.")
             return
 
@@ -55,42 +56,44 @@ def main(sink_matrix_path: str, input_constraints_path: str, tsv: bool, threshol
 
 
 if __name__ == '__main__':
+
     main(r"C:\Users\Andrej Šimurka\Desktop\atractor_analysis_inference\input_networks\10_nodes_1_sinks",
          r"C:\Users\Andrej Šimurka\Desktop\atractor_analysis_inference\input_networks\10_nodes_1_constraints",
-         True, 0.85, 0.2, 10, 4, 1, 1, 10, 0.95, r"C:\Users\Andrej Šimurka\Desktop\atractor_analysis_inference\out_dir",
-         set(), set(), 1)
+         True, 0.85, 0.2, 10, 10, 1, 1, 20, 0.95, r"C:\Users\Andrej Šimurka\Desktop\atractor_analysis_inference\out_dir",
+         {1,8,9}, {0,3,5}, 1,4)
+
 
     main(r"C:\Users\Andrej Šimurka\Desktop\atractor_analysis_inference\input_networks\10_nodes_2_sinks",
          r"C:\Users\Andrej Šimurka\Desktop\atractor_analysis_inference\input_networks\10_nodes_2_constraints",
-         True, 0.85, 0.2, 10, 4, 1, 1, 10, 0.95, r"C:\Users\Andrej Šimurka\Desktop\atractor_analysis_inference\out_dir",
-         set(), set(), 2)
+         True, 0.85, 0.2, 10, 10, 1, 1, 20, 0.95, r"C:\Users\Andrej Šimurka\Desktop\atractor_analysis_inference\out_dir",
+         {2,5,9}, {1,7,8}, 2,4)
 
     main(r"C:\Users\Andrej Šimurka\Desktop\atractor_analysis_inference\input_networks\20_nodes_1_sinks",
          r"C:\Users\Andrej Šimurka\Desktop\atractor_analysis_inference\input_networks\20_nodes_1_constraints",
-         True, 0.85, 0.2, 10, 4, 1, 1, 10, 0.95, r"C:\Users\Andrej Šimurka\Desktop\atractor_analysis_inference\out_dir",
-         set(), set(), 1)
+        True, 0.85, 0.2, 10, 20, 8, 5, 10, 0.95, r"C:\Users\Andrej Šimurka\Desktop\atractor_analysis_inference\out_dir",
+        {10, 13, 15}, {7, 9, 11, 12, 17, 18}, 1, 3)
 
     main(r"C:\Users\Andrej Šimurka\Desktop\atractor_analysis_inference\input_networks\20_nodes_2_sinks",
          r"C:\Users\Andrej Šimurka\Desktop\atractor_analysis_inference\input_networks\20_nodes_2_constraints",
          True, 0.85, 0.2, 10, 4, 1, 1, 10, 0.95, r"C:\Users\Andrej Šimurka\Desktop\atractor_analysis_inference\out_dir",
-         set(), set(), 2)
+         set(), set(), 2, 0)
 
     main(r"C:\Users\Andrej Šimurka\Desktop\atractor_analysis_inference\input_networks\30_nodes_1_sinks",
          r"C:\Users\Andrej Šimurka\Desktop\atractor_analysis_inference\input_networks\30_nodes_1_constraints",
          True, 0.85, 0.2, 10, 4, 1, 1, 10, 0.95, r"C:\Users\Andrej Šimurka\Desktop\atractor_analysis_inference\out_dir",
-         set(), set(), 1)
+         set(), set(), 1, 0)
 
     main(r"C:\Users\Andrej Šimurka\Desktop\atractor_analysis_inference\input_networks\30_nodes_2_sinks",
          r"C:\Users\Andrej Šimurka\Desktop\atractor_analysis_inference\input_networks\30_nodes_2_constraints",
          True, 0.85, 0.2, 10, 4, 1, 1, 10, 0.95, r"C:\Users\Andrej Šimurka\Desktop\atractor_analysis_inference\out_dir",
-         set(), set(), 2)
+         set(), set(), 2, 0)
 
     main(r"C:\Users\Andrej Šimurka\Desktop\atractor_analysis_inference\input_networks\50_nodes_1_sinks",
          r"C:\Users\Andrej Šimurka\Desktop\atractor_analysis_inference\input_networks\50_nodes_1_constraints",
          True, 0.85, 0.2, 10, 4, 1, 1, 10, 0.95, r"C:\Users\Andrej Šimurka\Desktop\atractor_analysis_inference\out_dir",
-         set(), set(), 1)
+         set(), set(), 1, 0)
 
     main(r"C:\Users\Andrej Šimurka\Desktop\atractor_analysis_inference\input_networks\50_nodes_2_sinks",
          r"C:\Users\Andrej Šimurka\Desktop\atractor_analysis_inference\input_networks\50_nodes_2_constraints",
          True, 0.85, 0.2, 10, 4, 1, 1, 10, 0.95, r"C:\Users\Andrej Šimurka\Desktop\atractor_analysis_inference\out_dir",
-         set(), set(), 2)
+         set(), set(), 2, 0)
