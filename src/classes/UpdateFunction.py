@@ -23,7 +23,7 @@ class UpdateFunction:
         self.regulators = []
         self.fixed = set()
 
-    def __deepcopy__(self):
+    def deepcopy__(self):
         result: UpdateFunction = UpdateFunction(self.gene, self.target_bn_info)
         result.canalyzed = deepcopy(self.canalyzed)
         result.canalyzing = deepcopy(self.canalyzing)
@@ -143,6 +143,8 @@ class UpdateFunction:
         :param total_num_of_regulations  total number of regulations in the whole network"""
 
         non_output_genes = list(set(range(self.target_bn_info.num_of_vars)) - self.target_bn_info.output_genes)
+        if 5 in non_output_genes:
+            pass
         regulators_to_mutate = choices(non_output_genes, k=num_of_mutations)
 
         for regulator in regulators_to_mutate:

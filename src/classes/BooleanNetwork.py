@@ -18,11 +18,12 @@ class BooleanNetwork:
 
     def __init__(self, target_bn_info: bn.BNInfo):
         self.target_bn_info = target_bn_info
-        self.functions = [UpdateFunction(i, target_bn_info) for i in range(target_bn_info.num_of_vars)]
+        self.functions: List[UpdateFunction] = [UpdateFunction(i, target_bn_info) for i in
+                                                range(target_bn_info.num_of_vars)]
 
-    def __deepcopy__(self):
+    def deepcopy__(self):
         result: BooleanNetwork = BooleanNetwork(self.target_bn_info)
-        result.functions = deepcopy(self.functions)
+        result.functions = list(map(lambda f: f.deepcopy__(), self.functions))
         return result
 
     @property
@@ -127,7 +128,8 @@ class BooleanNetwork:
         observed_sinks = detect_steady_states(sag)
         bpg = bg.BipartiteGraph(target_sinks, observed_sinks)
         cost, pairs = bpg.minimal_weighted_assignment()
-        dimension = self.target_bn_info.num_of_vars - len(isolated_variables)  # number of variables in each state after reduction
+        dimension = self.target_bn_info.num_of_vars - len(
+            isolated_variables)  # number of variables in each state after reduction
         matching_variables = 0  # variable = one element of a state vector
 
         # if some states were matched, then total number of matching variables is equal to total number of variable
@@ -149,10 +151,9 @@ class BooleanNetwork:
                     matching_variables += dimension * 1 / 2  # penalty 1/2 for not being in single state attractor
 
         # else:  len(target_sinks) <= len(observed_sinks)
-            # there is possibility that some steady-states were not caught while measuring which is more and more
-            # probable by increasing number of genes where the number of steady-states grows exponentially
-            # therefore, no penalty is given and total number of variables is only equal to number of variable pairs
-
+        # there is possibility that some steady-states were not caught while measuring which is more and more
+        # probable by increasing number of genes where the number of steady-states grows exponentially
+        # therefore, no penalty is given and total number of variables is only equal to number of variable pairs
 
         return matching_variables / total_variables
 

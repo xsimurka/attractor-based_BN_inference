@@ -27,7 +27,8 @@ class Generation:
         if nets is None:
             self.networks = [BooleanNetwork(target_bn_info) for _ in range(num_of_nets)]
         else:
-            self.networks = list(map(deepcopy, nets))  # due to a possibility of picking the same 2 network instances
+            self.networks = list(
+                map(lambda n: n.deepcopy__(), nets))  # due to a possibility of picking the same 2 network instances
         self.scores = [0.0 for _ in range(num_of_nets)]
 
     @property
@@ -48,25 +49,23 @@ class Generation:
         scores = pd.Series(self.scores)
         num_of_elite = round(self.num_of_nets * elite_ratio)
         elite = scores.nlargest(num_of_elite).index.values.tolist()  # indices of best nets in generation
-        best = scores[scores == self.best].index.values.tolist()
         weights = list(softmax(np.array(self.scores)))  # probability distribution of picking nets to new generation
         # by setting <k> argument as follows, the new generations will contain the same number of nets as previous one
-        picked = choices(range(self.num_of_nets), weights=weights, k=self.num_of_nets - num_of_elite)
+        picked = choices(range(self.num_of_nets), weights=weights, k=self.num_of_nets - num_of_elite - 1)
         new_gen = Generation(self.num_of_nets, self.target_bn_info,
-                             [self.networks[i] for i in elite] + [self.networks[i] for i in picked])
-        new_gen.mutate(num_of_mut_genes, num_of_mutations, best)
+                             [self.networks[elite[0]]] + [self.networks[i] for i in elite] + [self.networks[i] for i in picked])
+        new_gen.mutate(num_of_mut_genes, num_of_mutations, 1)
         return new_gen
 
-    def mutate(self, num_of_genes: int, num_of_mutations: int, best_indices: List[int]) -> None:
+    def mutate(self, num_of_genes: int, num_of_mutations: int, begin: int) -> None:
         """Mutates given number of genes of each BN of given generation by given number of mutations
 
         :param num_of_genes      number of genes to be mutated
         :param num_of_mutations  number of mutations to be performed on each gene
-        :param best_indices      indices of best networks in the previous generation"""
+        :param begin             index of first network that will be mutated"""
 
-        for i in range(len(self.networks)):
-            if i not in best_indices:
-                self.networks[i].mutate(num_of_genes, num_of_mutations)
+        for i in range(begin, len(self.networks), 1):  # skip the best network from the previous generation
+            self.networks[i].mutate(num_of_genes, num_of_mutations)
 
     def compute_fitness(self):
         """Computes fitness of each BN of given generation comparing to target network described by the input data.

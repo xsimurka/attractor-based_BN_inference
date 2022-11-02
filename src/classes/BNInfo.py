@@ -90,10 +90,10 @@ class BNInfo:
         :param correlation  Pearson's correlation between tuple of genes
         :returns            directed regulation between gene1 and gene2"""
 
-        if gene1 in self.input_genes and gene2 in self.output_genes:
+        if gene1 in self.input_genes or gene2 in self.output_genes:
             return reg.Regulation(gene1, gene2, correlation > 0)
 
-        if gene2 in self.input_genes and gene1 in self.output_genes:
+        if gene2 in self.input_genes or gene1 in self.output_genes:
             return reg.Regulation(gene2, gene1, correlation > 0)
 
         if random() < 0.5:
