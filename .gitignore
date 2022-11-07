@@ -1,2 +1,5 @@
 input_networks
 out_dir
+target_networks
+test.py
+src/ignored_files
