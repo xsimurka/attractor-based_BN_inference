@@ -4,8 +4,7 @@ from scipy.special import softmax
 import numpy as np
 import pandas as pd
 from random import choices
-from copy import deepcopy
-import src.classes.BNInfo as bn
+import src.classes.TargetBN as bn
 
 State = Tuple[bool]
 
@@ -20,7 +19,7 @@ class Generation:
         scores            fitness score for each network from <networks> in [0; 1]
                           describes how well the network fits the input data"""
 
-    def __init__(self, num_of_nets: int, target_bn_info: bn.BNInfo,
+    def __init__(self, num_of_nets: int, target_bn_info: bn.TargetBN,
                  nets: Optional[List[BooleanNetwork]] = None):
         self.num_of_nets = num_of_nets
         self.target_bn_info = target_bn_info

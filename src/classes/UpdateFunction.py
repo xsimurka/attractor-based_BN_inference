@@ -1,7 +1,7 @@
 from copy import deepcopy
 from random import randint, choices, choice
 from typing import Tuple, Optional, List
-import src.classes.BNInfo as bn
+import src.classes.TargetBN as bn
 
 
 class UpdateFunction:
@@ -15,7 +15,7 @@ class UpdateFunction:
         regulators      ids of genes that regulates <gene>
         fixed           set of fixed regulators of actual gene"""
 
-    def __init__(self, gene: int, target_bn_info: bn.BNInfo):
+    def __init__(self, gene: int, target_bn_info: bn.TargetBN):
         self.gene = gene
         self.target_bn_info = target_bn_info
         self.canalyzing = []
@@ -118,6 +118,7 @@ class UpdateFunction:
 
         mutations = []
         if gene in self.regulators:
+            mutations.append("c_and_c_values_reversion")
             if self.arity >= 2:
                 mutations.append("c_and_c_values_swapping")
 
@@ -126,11 +127,8 @@ class UpdateFunction:
                 mutations.append("canalyzed_value_reversion")
                 mutations.append("c_and_c_values_removal")
 
-            if self.get_c_and_c_values(gene) in {(0, 1), (1, 0)}:
-                mutations.append("c_and_c_values_reversion")
-
         elif total_num_of_regulations < (
-                self.target_bn_info.num_of_vars ** 2) / 4:  # restricted number of regulations in network
+                self.target_bn_info.num_of_vars ** 2) / 2:  # restricted number of regulations in network
             mutations.append("c_and_c_values_insertion")
 
         return mutations
@@ -143,8 +141,6 @@ class UpdateFunction:
         :param total_num_of_regulations  total number of regulations in the whole network"""
 
         non_output_genes = list(set(range(self.target_bn_info.num_of_vars)) - self.target_bn_info.output_genes)
-        if 5 in non_output_genes:
-            pass
         regulators_to_mutate = choices(non_output_genes, k=num_of_mutations)
 
         for regulator in regulators_to_mutate:
@@ -167,7 +163,7 @@ class UpdateFunction:
     def get_nth_non_fixed_gene_index(self, n: int) -> int:
         """Returns id of nth non fixed regulator of given NCF rule
 
-        :param n
+        :param   n
         :return  index of nth non fixed regulator, -1 if less than n regulators are non fixed"""
 
         result = -1

@@ -15,8 +15,7 @@ def output_to_directory(target_dir: str, gen: gen.Generation, num_of_vars: int, 
     best_score = gen.best
     for i in range(gen.num_of_nets):
         if gen.scores[i] == best_score:
-            with open("{}/{}_nodes_{}".format(target_dir, num_of_vars, net_index),
+            with open("{}\\model{}_{}.aeon".format(target_dir, num_of_vars, net_index),
                       "w") as out_net_f:
-                print(gen.networks[i].to_aeon_string(-1, set()), file=out_net_f)
-
-    return best_score
+                aeon_str = gen.networks[i].to_aeon_string(-1, set())
+                print(aeon_str, file=out_net_f)

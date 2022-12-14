@@ -8,7 +8,7 @@ from random import random
 State = Tuple[bool]
 
 
-class BNInfo:
+class TargetBN:
     """ Class holds information about the target network.
 
     Attributes:

@@ -1,11 +1,10 @@
-from copy import deepcopy
 from typing import Set, Optional, List
 from random import choices
 from src.classes.UpdateFunction import UpdateFunction
 from src.classes.Regulation import Regulation
 from src.detect import detect_steady_states, get_model_computational_structures, is_attractor_state
 import src.utils as utils
-import src.classes.BNInfo as bn
+import src.classes.TargetBN as bn
 import src.classes.BipartiteGraph as bg
 
 
@@ -16,7 +15,7 @@ class BooleanNetwork:
         target_bn_info    object that holds the information about target BN
         functions         list of <num_of_variables> update functions in the form of NCFs"""
 
-    def __init__(self, target_bn_info: bn.BNInfo):
+    def __init__(self, target_bn_info: bn.TargetBN):
         self.target_bn_info = target_bn_info
         self.functions: List[UpdateFunction] = [UpdateFunction(i, target_bn_info) for i in
                                                 range(target_bn_info.num_of_vars)]
@@ -154,7 +153,8 @@ class BooleanNetwork:
         # there is possibility that some steady-states were not caught while measuring which is more and more
         # probable by increasing number of genes where the number of steady-states grows exponentially
         # therefore, no penalty is given and total number of variables is only equal to number of variable pairs
-
+        if total_variables == 0:
+            return 0
         return matching_variables / total_variables
 
     def get_regulated_by(self, gene: int) -> Set[int]:

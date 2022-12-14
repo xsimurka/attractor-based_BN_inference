@@ -1,7 +1,7 @@
 from random import choice, choices
 from typing import Set, Tuple, Optional, List, Any
 from operator import itemgetter
-import src.classes.BNInfo as bn
+import src.classes.TargetBN as bn
 import src.classes.Regulation as reg
 import src.classes.Generation as gen
 import src.classes.BipartiteGraph as bg
@@ -24,7 +24,7 @@ def generate_rule(sign: Optional[bool]) -> Tuple[int, int]:
 
 
 def create_initial_generation(num_of_nets: int, input_constraints: Set[reg.Regulation],
-                              derived_constraints: Set[reg.Regulation], target_bn_info: bn.BNInfo) -> gen.Generation:
+                              derived_constraints: Set[reg.Regulation], target_bn_info: bn.TargetBN) -> gen.Generation:
     """Creates the initial generation using regulations observed from input and derived constraints. Each BN is then
     mutated only once on one gene.
 
@@ -37,8 +37,8 @@ def create_initial_generation(num_of_nets: int, input_constraints: Set[reg.Regul
     print("Creating initial generation...", end="")
     init_gen = gen.Generation(num_of_nets, target_bn_info)
     for net in init_gen.networks:
-        derived_constraints_subset = choices(list(derived_constraints),
-                                             k=ceil(len(derived_constraints) / init_gen.num_of_nets))
+        derived_constraints_subset = set(choices(list(derived_constraints),
+                                                 k=ceil(len(derived_constraints) / init_gen.num_of_nets)))
         net.initialize_ncfs(input_constraints, derived_constraints_subset)
     init_gen.mutate(1, 1, 0)  # allows only one mutation on one gene in the initial generation
     print(" done.")
