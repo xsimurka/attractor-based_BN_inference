@@ -5,7 +5,7 @@ from typing import Optional, List
 
 
 def explicit_sinks_enumerator(model_path: str, output_path: str, num_of_vars: int,
-                              enumerator_path: Optional[str] = "",
+                              enumerator_path: Optional[str] = ".\\sink-state-enumerator.exe",
                               reduction: Optional[float] = None) -> None:
     """The main function of this script. The script enumerates explicit sinks of given model using given enumerator
     to the output file specified.
@@ -30,7 +30,7 @@ def explicit_sinks_enumerator(model_path: str, output_path: str, num_of_vars: in
         write_sinks_to_file(sinks, output_path, i, reduction)
 
 
-def get_model_explicit_sinks(model: str, enumerator_path: Optional[str] = '') -> List[List[int]]:
+def get_model_explicit_sinks(model: str, enumerator_path: Optional[str] = ".\\sink-state-enumerator.exe") -> List[List[int]]:
     """Functions returns all explicit sinks of the given model in .aeon format
     :param model            model in .aeon format
     :param enumerator_path  total file path to sink state enumerator binary
