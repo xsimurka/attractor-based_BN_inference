@@ -31,6 +31,9 @@ def detect_steady_states(sag: SymbolicAsyncGraph) -> List[State]:
         item = candidates.pop()
         candidates = [item.intersect(x) for x in candidates]
 
+    if not candidates:
+        return []
+
     sinks = candidates[0].vertices().list_vertices()
     if not sinks:
         return []
