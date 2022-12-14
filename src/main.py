@@ -45,7 +45,7 @@ def main(steady_state_matrix_path: str, input_constraints_path: str, num_of_vari
     print("Start")
     target_bn_info: TargetBN = read_input_matrix(steady_state_matrix_path, num_of_variables, DELIMITER, inputs, outputs)
     input_constraints: Set[Regulation] = read_input_constrains(input_constraints_path, DELIMITER)
-    derived_constraints: Set[Regulation] = target_bn_info.derive_constraints(THRESHOLD)
+    derived_constraints: Set[Regulation] = target_bn_info.derive_regulations(THRESHOLD)
     act_generation = utils.create_initial_generation(NUM_OF_NETWORKS, input_constraints,
                                                      derived_constraints - input_constraints, target_bn_info)
 

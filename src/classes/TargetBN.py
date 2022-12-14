@@ -29,16 +29,16 @@ class TargetBN:
         self.ko_sinks: Dict[int, List[State]] = {}
         self.oe_sinks: Dict[int, List[State]] = {}
 
-    def derive_constraints(self, threshold: float) -> Set[reg.Regulation]:
+    def derive_regulations(self, threshold: float) -> Set[reg.Regulation]:
         """Computes Pearson's correlation between each pair of genes, if the absolute value is greater than given
         threshold, then suggests such regulation to be added later during the inference.
         As the correlation is symmetric, the set of derived regulations are firstly undirected.
-        Consequently, directions of the all constraint regulations are randomly picked.
+        Consequently, directions of the all derived regulations are randomly picked.
 
         :param threshold  the value that the correlation must exceed in order to be suggested
         :return           list of suggested undirected regulations"""
 
-        print("Deriving constraints from gene-to-gene correlations...", end="")
+        print("Deriving regulations from gene-to-gene correlations...", end="")
         derived_regulations: Set[reg.Regulation] = set()
         for i in range(self.num_of_vars):
             for j in range(i + 1, self.num_of_vars, 1):
