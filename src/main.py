@@ -44,16 +44,18 @@ def main(steady_state_matrix_path: str, input_constraints_path: str, num_of_vari
                                                      derived_constraints - input_constraints, target_bn_info)
 
     print("Starting genetic algorithm...")
+    print()
     act_iter = 1
     while True:
-        print("Actual iteration: ", act_iter)
+        print("Current iteration: ", act_iter)
         print("Evaluating fitness...", end="")
         act_generation.compute_fitness()
         print(" done.")
-        print("Best fitness of generation: {}".format(act_generation.best))
+        print("The best fitness of the generation: {}".format(act_generation.best))
         print()
         if act_iter >= MAX_ITERATION or act_generation.best >= MAX_FITNESS:
-            print("Ending genetic algorithm...")
+            print("Ending genetic algorithm.")
+            print("The best achieved fitness: ", act_generation.best)
             print("Writing best fitting networks to files...", end="")
             output_to_directory(output_path, act_generation, num_of_variables, net_index)
             print(" done.")
@@ -61,3 +63,8 @@ def main(steady_state_matrix_path: str, input_constraints_path: str, num_of_vari
 
         act_generation = act_generation.create_new_generation(NUM_OF_MUT_GENES, NUM_OF_MUTATIONS, ELITE_RATIO)
         act_iter += 1
+
+main(r"C:\Users\adiko\Desktop\atractor_analysis_inference\data\input_networks\sinks\yeast10_sinks50.tsv",
+                   r"C:\Users\adiko\Desktop\atractor_analysis_inference\data\input_networks\constraints\yeast_constraints.tsv",
+                   10, r"C:\Users\adiko\Desktop\atractor_analysis_inference\data\out_dir",
+                   {2, 5, 9}, {1, 7, 8}, 1)

@@ -11,7 +11,7 @@ def read_input_matrix(matrix_path: str, num_of_variables: int, delimiter: Option
 
     :param matrix_path - path to file containing the input matrix of steady states
     :param num_of_variables
-    :param delimiter - delimiter of matrix elements
+    :param delimiter - delimiter of matrix elements, if None given, whitespace characters are used
     :param inputs
     :param outputs
     :return dictionary where key is index of perturbed gene and value is set of corresponding steady states"""

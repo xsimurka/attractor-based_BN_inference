@@ -13,21 +13,21 @@ class Generation:
     """Class represents one generation of BNs of genetic algorithm
 
     Attributes:
-        num_of_nets       number of networks in generation
-        target-nb_info    object that holds the information about target BN
-        networks          list of <num_of_nets> instances of <BooleanNetwork> that Generation consists of
-        scores            fitness score for each network from <networks> in [0; 1]
-                          describes how well the network fits the input data"""
+        num_of_nets  number of networks in generation
+        target_bn    object that holds the information about target BN
+        networks     list of <num_of_nets> instances of <BooleanNetwork> that Generation consists of
+        scores       fitness score for each network from <networks> in [0; 1]
+                     describes how well the network fits the input data"""
 
-    def __init__(self, num_of_nets: int, target_bn_info: bn.TargetBN,
+    def __init__(self, num_of_nets: int, target_bn: bn.TargetBN,
                  nets: Optional[List[BooleanNetwork]] = None):
         self.num_of_nets = num_of_nets
-        self.target_bn_info = target_bn_info
+        self.target_bn = target_bn
         if nets is None:
-            self.networks = [BooleanNetwork(target_bn_info) for _ in range(num_of_nets)]
+            self.networks = [BooleanNetwork(target_bn) for _ in range(num_of_nets)]
         else:
             self.networks = list(
-                map(lambda n: n.deepcopy__(), nets))  # due to a possibility of picking the same 2 network instances
+                map(lambda n: n.deepcopy_(), nets))  # due to a possibility of picking the same 2 network instances
         self.scores = [0.0 for _ in range(num_of_nets)]
 
     @property
@@ -41,7 +41,7 @@ class Generation:
 
         :param num_of_mut_genes  number of genes to be mutated in each picked network
         :param num_of_mutations  number of mutations to be performed on each gene
-        :param elite_ratio        real number from range [0;1] determining percentage of best fitting networks
+        :param elite_ratio       real number from range [0;1] determining percentage of best fitting networks
                                  that are picked automatically to the next generation
         :return                  instance of new generation created"""
 
@@ -51,7 +51,7 @@ class Generation:
         weights = list(softmax(np.array(self.scores)))  # probability distribution of picking nets to new generation
         # by setting <k> argument as follows, the new generations will contain the same number of nets as previous one
         picked = choices(range(self.num_of_nets), weights=weights, k=self.num_of_nets - num_of_elite - 1)
-        new_gen = Generation(self.num_of_nets, self.target_bn_info,
+        new_gen = Generation(self.num_of_nets, self.target_bn,
                              [self.networks[elite[0]]] + [self.networks[i] for i in elite] + [self.networks[i] for i in picked])
         new_gen.mutate(num_of_mut_genes, num_of_mutations, 1)
         return new_gen
@@ -72,11 +72,11 @@ class Generation:
 
         for i in range(self.num_of_nets):
             total_score = self.networks[i].compute_fitness(-1)  # wild-type
-            for j in sorted(self.target_bn_info.ko_sinks.keys()):  # knock-outs
+            for j in sorted(self.target_bn.ko_sinks.keys()):  # knock-outs
                 total_score += self.networks[i].compute_fitness(j, False)
 
-            for j in sorted(self.target_bn_info.oe_sinks.keys()):  # over-expressions
+            for j in sorted(self.target_bn.oe_sinks.keys()):  # over-expressions
                 total_score += self.networks[i].compute_fitness(j, True)
 
             # final net's score is average score of all experiments
-            self.scores[i] = total_score / (len(self.target_bn_info.ko_sinks) + len(self.target_bn_info.oe_sinks) + 1)
+            self.scores[i] = total_score / (len(self.target_bn.ko_sinks) + len(self.target_bn.oe_sinks) + 1)

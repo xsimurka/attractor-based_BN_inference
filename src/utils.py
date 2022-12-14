@@ -45,7 +45,7 @@ def create_initial_generation(num_of_nets: int, input_constraints: Set[reg.Regul
     return init_gen
 
 
-def manhattan_distance(state1: Tuple[bool], state2: Tuple[bool]) -> int:
+def hamming_distance(state1: Tuple[bool], state2: Tuple[bool]) -> int:
     """Calculates manhattan distance between two steady-states.
 
     :param state1  first attractor
@@ -70,7 +70,7 @@ def get_unmatched_states(bpg: bg.BipartiteGraph, matched_pairs: List[Tuple[int, 
     :param position       0 if some target steady-stated were not matched, 1 if observed were not matched
     :return               list of states that were not matched in minimal weighted assignment"""
 
-    assert len(bpg.target) != len(bpg.observed)
+    assert len(bpg.target) != len(bpg.current)
     matched_indices = list(map(itemgetter(position), matched_pairs))
     unmatched_indices = set(range(len(overhung))) - set(matched_indices)  # set difference returns unmatched indices
     unmatched_states = []

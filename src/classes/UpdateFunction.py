@@ -8,23 +8,25 @@ class UpdateFunction:
     """Class represents boolean update rule in the form of Nested Canalyzing Function (NCF)
 
     Attributes:
-        gene            id of regulated gene
-        target_bn_info  object that holds the information about target BN
-        canalyzing      canalyzing values
-        canalyzed       canalyzed values
-        regulators      ids of genes that regulates <gene>
-        fixed           set of fixed regulators of actual gene"""
+        gene        id of regulated gene
+        target_bn   object that holds the information about target BN
+        canalyzing  canalyzing values
+        canalyzed   canalyzed values
+        regulators  ids of genes that regulates <gene>
+        fixed       set of fixed regulators of actual gene"""
 
-    def __init__(self, gene: int, target_bn_info: bn.TargetBN):
+    def __init__(self, gene: int, target_bn: bn.TargetBN):
         self.gene = gene
-        self.target_bn_info = target_bn_info
+        self.target_bn = target_bn
         self.canalyzing = []
         self.canalyzed = []
         self.regulators = []
         self.fixed = set()
 
-    def deepcopy__(self):
-        result: UpdateFunction = UpdateFunction(self.gene, self.target_bn_info)
+    def deepcopy_(self):
+        """Method creates shallow copy of target_bn and deepcopy of other attributes"""
+
+        result: UpdateFunction = UpdateFunction(self.gene, self.target_bn)
         result.canalyzed = deepcopy(self.canalyzed)
         result.canalyzing = deepcopy(self.canalyzing)
         result.regulators = deepcopy(self.regulators)
@@ -107,10 +109,8 @@ class UpdateFunction:
 
         return not bool(self.canalyzed[-1])
 
-    def select_reasonable_mutations(self, gene: int, total_num_of_regulations: int) -> List[str]:
-        """Selects all reasonable mutations for particular selected gene according to its occurrence in NCF rule.
-        Leaves possibility that no mutation is available - if all regulations of picked gene are fixed and model is
-        already too dense.
+    def select_meaningful_mutations(self, gene: int, total_num_of_regulations: int) -> List[str]:
+        """Selects all meaningful mutations for particular selected gene according to its occurrence in NCF rule.
 
         :param gene                      id of regulator to be checked
         :param total_num_of_regulations  the number of all current regulations in the network
@@ -119,6 +119,7 @@ class UpdateFunction:
         mutations = []
         if gene in self.regulators:
             mutations.append("c_and_c_values_reversion")
+
             if self.arity >= 2:
                 mutations.append("c_and_c_values_swapping")
 
@@ -128,7 +129,7 @@ class UpdateFunction:
                 mutations.append("c_and_c_values_removal")
 
         elif total_num_of_regulations < (
-                self.target_bn_info.num_of_vars ** 2) / 2:  # restricted number of regulations in network
+                self.target_bn.num_of_vars ** 2) / 2:  # restricted number of regulations in network
             mutations.append("c_and_c_values_insertion")
 
         return mutations
@@ -140,11 +141,11 @@ class UpdateFunction:
         :param num_of_mutations          number of mutations to be done
         :param total_num_of_regulations  total number of regulations in the whole network"""
 
-        non_output_genes = list(set(range(self.target_bn_info.num_of_vars)) - self.target_bn_info.output_genes)
+        non_output_genes = list(set(range(self.target_bn.num_of_vars)) - self.target_bn.output_genes)
         regulators_to_mutate = choices(non_output_genes, k=num_of_mutations)
 
         for regulator in regulators_to_mutate:
-            mutations = self.select_reasonable_mutations(regulator, total_num_of_regulations)
+            mutations = self.select_meaningful_mutations(regulator, total_num_of_regulations)
             if mutations:
                 getattr(self, choice(mutations))(regulator)
 

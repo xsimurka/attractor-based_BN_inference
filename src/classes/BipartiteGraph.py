@@ -9,30 +9,30 @@ class BipartiteGraph:
 
     Attributes:
         target     Boolean vertices representing target steady-states (from input data)
-        observed   Boolean vertices representing observed steady-states (from attractor analysis)
-        distances  matrix m*n representing edges between each pair of target-observed steady-state,
-                   value distances[m][n] represent distance between m-th observed and n-th target steady-state"""
+        current    Boolean vertices representing steady-states from the current model's attractor analysis
+        distances  matrix m*n representing edges between each pair of target-current steady-state,
+                   value distances[m][n] represent distance between m-th current and n-th target steady-state"""
 
-    def __init__(self, target_sinks, observed_sinks):
+    def __init__(self, target_sinks, current_sinks):
         self.target = target_sinks
-        self.observed = observed_sinks
-        self.distances: List[List[Optional[int]]] = [[None] * len(self.target) for _ in range(len(self.observed))]
+        self.current = current_sinks
+        self.distances: List[List[Optional[int]]] = [[None] * len(self.target) for _ in range(len(self.current))]
         self.set_distances()
 
     def set_distances(self):
         """Calculate distances between all pairs observed-target steady-state. Sets .distances matrix.
         Distance between two states is equal to their Manhattan distance"""
 
-        for i in range(len(self.observed)):
+        for i in range(len(self.current)):
             for j in range(len(self.target)):
-                self.distances[i][j] = utils.manhattan_distance(self.observed[i], self.target[j])
+                self.distances[i][j] = utils.hamming_distance(self.current[i], self.target[j])
 
     def minimal_weighted_assignment(self) -> Tuple[Optional[int], List[Tuple[int, int]]]:
         """Calculates minimal weighted assignment of given (possibly unbalanced) bipartite graph
 
-        :return   tuple cost of minimal assignment, list of tuples of matching target-observed sink index pairs"""
+        :return   tuple cost of minimal assignment, list of tuples of matching target-current sink index pairs"""
 
-        if not self.observed or not self.target:
+        if not self.current or not self.target:
             return None, []
 
         cost = np.array(self.distances)

@@ -66,6 +66,7 @@ class TargetBN:
                                                regulation.target))
         else:
             print("No derived regulations.")
+        print()
 
     def is_valid_regulation(self, gene1: int, gene2: int) -> bool:
         """Validates source and target gene of derived regulation. If both are either inputs or outputs,

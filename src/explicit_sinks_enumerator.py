@@ -34,7 +34,6 @@ def get_model_explicit_sinks(model: str, enumerator_path: Optional[str] = ".\\si
     """Functions returns all explicit sinks of the given model in .aeon format
     :param model            model in .aeon format
     :param enumerator_path  total file path to sink state enumerator binary
-
     :return                 list of model's explicit sinks"""
 
     r1 = randint(1000, 9999)
@@ -69,7 +68,6 @@ def get_perturbed_model(model: str, pert_gene: int, pert_type: bool) -> str:
     :param model      model in .aeon format
     :param pert_gene  id of perturbed gene
     :param pert_type  True for over-expression, False for knockout
-
     return:           perturbed model in .aeon format"""
 
     result = str()
@@ -95,9 +93,8 @@ def get_perturbed_model(model: str, pert_gene: int, pert_type: bool) -> str:
 def replace_for_non_observable(reg: str) -> str:
     """Function replaces the observable regulation for the unobservable.
     :param reg  observable regulation
+    :return     unobservable variant"""
 
-    :return     unobservable variant
-    """
     s = reg.split(" -| ")
     if len(s) == 2:
         return s[0] + " -|? " + s[1]

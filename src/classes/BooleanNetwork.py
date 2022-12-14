@@ -12,17 +12,19 @@ class BooleanNetwork:
     """Class represents Boolean network (BN)
 
     Attributes:
-        target_bn_info    object that holds the information about target BN
-        functions         list of <num_of_variables> update functions in the form of NCFs"""
+        target_bn    object that holds the information about target BN
+        functions    list of <num_of_variables> update functions in the form of NCFs"""
 
-    def __init__(self, target_bn_info: bn.TargetBN):
-        self.target_bn_info = target_bn_info
-        self.functions: List[UpdateFunction] = [UpdateFunction(i, target_bn_info) for i in
-                                                range(target_bn_info.num_of_vars)]
+    def __init__(self, target_bn: bn.TargetBN):
+        self.target_bn = target_bn
+        self.functions: List[UpdateFunction] = [UpdateFunction(i, target_bn) for i in
+                                                range(target_bn.num_of_vars)]
 
-    def deepcopy__(self):
-        result: BooleanNetwork = BooleanNetwork(self.target_bn_info)
-        result.functions = list(map(lambda f: f.deepcopy__(), self.functions))
+    def deepcopy_(self):
+        """Method creates shallow copy of target_bn and deepcopy of BN's functions"""
+
+        result: BooleanNetwork = BooleanNetwork(self.target_bn)
+        result.functions = list(map(lambda f: f.deepcopy_(), self.functions))
         return result
 
     @property
@@ -50,7 +52,6 @@ class BooleanNetwork:
         :param position    specifies the position in NCF rule where to be inserted, if None, it is appended to
                            the last position in NCF rule, can not be greater than functions arity"""
 
-        assert position is None or 0 <= position <= self.functions[regulation.target].arity
         self.functions[regulation.target].add_gene(regulation.source, fixed, position)
         canalyzing, canalyzed = utils.generate_rule(regulation.sign)
         self.functions[regulation.target].add_rule(canalyzing, canalyzed, position)
@@ -61,7 +62,7 @@ class BooleanNetwork:
         :param num_of_genes      number of genes to be mutated
         :param num_of_mutations  number of mutations to be performed on each gene"""
 
-        non_input_genes = list(set(range(self.target_bn_info.num_of_vars)) - self.target_bn_info.input_genes)
+        non_input_genes = list(set(range(self.target_bn.num_of_vars)) - self.target_bn.input_genes)
         genes_to_mutate = choices(non_input_genes, k=num_of_genes)
         for gene in genes_to_mutate:
             self.functions[gene].mutate(num_of_mutations, self.total_num_of_regulations)
@@ -80,7 +81,7 @@ class BooleanNetwork:
         model_string = str()
 
         # adds all meaningful regulations to the model
-        for i in range(self.target_bn_info.num_of_vars):  # iterates over update functions of given BN
+        for i in range(self.target_bn.num_of_vars):  # iterates over update functions of given BN
             # perturbed gene acts as fixed input node therefore, its original regulators are skipped
             if i == perturbed_gene:
                 continue
@@ -90,7 +91,7 @@ class BooleanNetwork:
                 model_string += "v_{} -{} v_{}\n".format(self.functions[i].regulators[j], reg_type, i)
 
         # adds all meaningful update functions to the model
-        for i in range(self.target_bn_info.num_of_vars):
+        for i in range(self.target_bn.num_of_vars):
             if i in isolated_variables:  # isolated variables are not added at all
                 continue
 
@@ -119,26 +120,26 @@ class BooleanNetwork:
         isolated_variables = self.get_isolated_variables(perturbed_gene_index)
         aeon_model_string = self.to_aeon_string(perturbed_gene_index, isolated_variables, perturbed_gene_state)
         model, sag = get_model_computational_structures(aeon_model_string)
-        target_sinks = self.target_bn_info.get_target_sinks(perturbed_gene_index, perturbed_gene_state)
+        target_sinks = self.target_bn.get_target_sinks(perturbed_gene_index, perturbed_gene_state)
 
         if isolated_variables:  # reduce dimension of target sinks in order to match observed data dimension
             target_sinks = utils.reduce_attractors_dimension(target_sinks, isolated_variables)
 
-        observed_sinks = detect_steady_states(sag)
-        bpg = bg.BipartiteGraph(target_sinks, observed_sinks)
+        current_sinks = detect_steady_states(sag)
+        bpg = bg.BipartiteGraph(target_sinks, current_sinks)
         cost, pairs = bpg.minimal_weighted_assignment()
-        dimension = self.target_bn_info.num_of_vars - len(
+        dimension = self.target_bn.num_of_vars - len(
             isolated_variables)  # number of variables in each state after reduction
         matching_variables = 0  # variable = one element of a state vector
 
         # if some states were matched, then total number of matching variables is equal to total number of variable
         # pairs minus cost (total number of variables that do not match), else it stays equal to 0 (initial value)
         if cost is not None:
-            matching_variables += (min(len(target_sinks), len(observed_sinks)) * dimension) - cost
+            matching_variables += (min(len(target_sinks), len(current_sinks)) * dimension) - cost
         total_variables = len(target_sinks) * dimension
 
-        if len(target_sinks) > len(observed_sinks):
-            # some steady-states from data were not reached by actual model, which is problematic because such
+        if len(target_sinks) > len(current_sinks):
+            # some steady-states from data are not included in the current model, which is problematic because such
             # model can not capture desired behaviour specified by the input data
             # total_variables is therefore, equal to number of variable pairs plus number of unpaired variables
 
@@ -164,7 +165,7 @@ class BooleanNetwork:
         :return      set of genes regulated by given gene"""
 
         result = set()
-        for i in range(self.target_bn_info.num_of_vars):
+        for i in range(self.target_bn.num_of_vars):
             for j in self.functions[i].regulators:
                 if gene == j:
                     result.add(i)
@@ -182,12 +183,12 @@ class BooleanNetwork:
         output_variables = set()
 
         # input variables
-        for act_gene in range(self.target_bn_info.num_of_vars):
+        for act_gene in range(self.target_bn.num_of_vars):
             if not self.functions[act_gene].regulators:  # only genes that have empty update function are inputs
                 input_variables.add(act_gene)
 
         # output variables
-        for act_gene in range(self.target_bn_info.num_of_vars):
+        for act_gene in range(self.target_bn.num_of_vars):
             regulates = self.get_regulated_by(act_gene)
 
             # gene is an output variable iff it regulates either no other genes or only perturbed gene (this regulation
