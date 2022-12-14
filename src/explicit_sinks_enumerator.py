@@ -3,37 +3,36 @@ from random import randint, random
 from operator import itemgetter
 from typing import Optional, List
 
+ENUMERATOR_PATH = ".\\sink-state-enumerator.exe"
+
 
 def explicit_sinks_enumerator(model_path: str, output_path: str, num_of_vars: int,
-                              enumerator_path: Optional[str] = ".\\sink-state-enumerator.exe",
                               reduction: Optional[float] = None) -> None:
     """The main function of this script. The script enumerates explicit sinks of given model using given enumerator
     to the output file specified.
     :param model_path       total file path to model that is desired to be processed
     :param output_path      total file path to desired output file with enumerated sinks
     :param num_of_vars      number of variables of given BN in <model_path>
-    :param enumerator_path  total file path to sink state enumerator binary
     :param reduction        real number from [0;1] that determines the reduction of all explicit sinks
                             that are printed to <output_path> file. If None given, all sinks are printed"""
 
     with open(model_path, "r") as model_f:
         model_str = model_f.read()
-    sinks = get_model_explicit_sinks(model_str, enumerator_path)
+    sinks = get_model_explicit_sinks(model_str)
     write_sinks_to_file(sinks, output_path, -1, reduction)
     for i in range(num_of_vars):
         pert_model = get_perturbed_model(model_str, i, False)
-        sinks = get_model_explicit_sinks(pert_model, enumerator_path)
+        sinks = get_model_explicit_sinks(pert_model)
         write_sinks_to_file(sinks, output_path, i, reduction)
 
         pert_model = get_perturbed_model(model_str, i, True)
-        sinks = get_model_explicit_sinks(pert_model, enumerator_path)
+        sinks = get_model_explicit_sinks(pert_model)
         write_sinks_to_file(sinks, output_path, i, reduction)
 
 
-def get_model_explicit_sinks(model: str, enumerator_path: Optional[str] = ".\\sink-state-enumerator.exe") -> List[List[int]]:
+def get_model_explicit_sinks(model: str) -> List[List[int]]:
     """Functions returns all explicit sinks of the given model in .aeon format
     :param model            model in .aeon format
-    :param enumerator_path  total file path to sink state enumerator binary
     :return                 list of model's explicit sinks"""
 
     r1 = randint(1000, 9999)
@@ -42,7 +41,7 @@ def get_model_explicit_sinks(model: str, enumerator_path: Optional[str] = ".\\si
     tmp2 = "tmp_{}".format(r2)
     with open(tmp2, "w") as model_f:
         print(model, file=model_f)
-    command = "type {} | {} > {}".format(tmp2, enumerator_path, tmp1)
+    command = "type {} | {} > {}".format(tmp2, ENUMERATOR_PATH, tmp1)
     os.system(command)
     os.remove(tmp2)
 

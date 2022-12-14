@@ -5,7 +5,8 @@ import src.classes.TargetBN as bn
 State = Tuple[bool]
 
 
-def read_input_matrix(matrix_path: str, num_of_variables: int, delimiter: Optional[str], inputs, outputs) -> bn.TargetBN:
+def read_input_matrix(matrix_path: str, num_of_variables: int, delimiter: Optional[str], inputs,
+                      outputs) -> bn.TargetBN:
     """Reads input matrix of steady-states, returns dictionary where key corresponds to perturbed gene or -1 for
     wild type experiment; and value corresponds to set of observed steady states of the target network.
 

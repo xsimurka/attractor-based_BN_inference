@@ -21,7 +21,7 @@ class BipartiteGraph:
 
     def set_distances(self):
         """Calculate distances between all pairs observed-target steady-state. Sets .distances matrix.
-        Distance between two states is equal to their Manhattan distance"""
+        Distance between two states is equal to their Hamming distance"""
 
         for i in range(len(self.current)):
             for j in range(len(self.target)):

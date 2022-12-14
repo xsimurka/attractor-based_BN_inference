@@ -46,7 +46,7 @@ def create_initial_generation(num_of_nets: int, input_constraints: Set[reg.Regul
 
 
 def hamming_distance(state1: Tuple[bool], state2: Tuple[bool]) -> int:
-    """Calculates manhattan distance between two steady-states.
+    """Calculates Hamming distance between two steady-states.
 
     :param state1  first attractor
     :param state2  second attractor

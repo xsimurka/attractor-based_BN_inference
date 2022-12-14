@@ -7,21 +7,27 @@ from src.classes.TargetBN import TargetBN
 
 # True if files above use tab as separator, otherwise False
 DELIMITER = None
+
 # threshold for correlation constraints
 THRESHOLD = 0.75
+
 # how many % of best fitting BNs are automatically picked to the next generation
 ELITE_RATIO = 0.2
+
 # number of networks in each generation
 NUM_OF_NETWORKS = 10
+
 # number of genes that are mutated in each generation
 NUM_OF_MUT_GENES = 2
+
 # number of mutations performed on each mutated gene
 NUM_OF_MUTATIONS = 2
+
 # maximum number of iterations of genetic algorithm
 MAX_ITERATION = 30
+
 # when some network reach this fitness, algorithm ends immediately
 MAX_FITNESS = 1.0
-# True if output results to files, otherwise False
 
 
 def main(steady_state_matrix_path: str, input_constraints_path: str, num_of_variables: int,
@@ -56,15 +62,10 @@ def main(steady_state_matrix_path: str, input_constraints_path: str, num_of_vari
         if act_iter >= MAX_ITERATION or act_generation.best >= MAX_FITNESS:
             print("Ending genetic algorithm.")
             print("The best achieved fitness: ", act_generation.best)
-            print("Writing best fitting networks to files...", end="")
+            print("Writing best-fitting networks to files...", end="")
             output_to_directory(output_path, act_generation, num_of_variables, net_index)
             print(" done.")
             return
 
         act_generation = act_generation.create_new_generation(NUM_OF_MUT_GENES, NUM_OF_MUTATIONS, ELITE_RATIO)
         act_iter += 1
-
-main(r"C:\Users\adiko\Desktop\atractor_analysis_inference\data\input_networks\sinks\yeast10_sinks50.tsv",
-                   r"C:\Users\adiko\Desktop\atractor_analysis_inference\data\input_networks\constraints\yeast_constraints.tsv",
-                   10, r"C:\Users\adiko\Desktop\atractor_analysis_inference\data\out_dir",
-                   {2, 5, 9}, {1, 7, 8}, 1)

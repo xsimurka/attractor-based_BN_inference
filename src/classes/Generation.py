@@ -52,7 +52,8 @@ class Generation:
         # by setting <k> argument as follows, the new generations will contain the same number of nets as previous one
         picked = choices(range(self.num_of_nets), weights=weights, k=self.num_of_nets - num_of_elite - 1)
         new_gen = Generation(self.num_of_nets, self.target_bn,
-                             [self.networks[elite[0]]] + [self.networks[i] for i in elite] + [self.networks[i] for i in picked])
+                             [self.networks[elite[0]]] + [self.networks[i] for i in elite] + [self.networks[i] for i in
+                                                                                              picked])
         new_gen.mutate(num_of_mut_genes, num_of_mutations, 1)
         return new_gen
 
